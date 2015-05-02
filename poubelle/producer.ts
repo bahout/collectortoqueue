@@ -3,7 +3,7 @@ var conf = {
     redis: {
         port: 6379,
         host: 'cl-redis.redis.cache.windows.net',
-        auth: 'ioYHOKAZb2UsTMzxCeYiGKDEiEkNLZ80y9nEtlQWPcM=',
+        auth: 'key',
         db: 3
         // auth_pass: 'ioYHOKAZb2UsTMzxCeYiGKDEiEkNLZ80y9nEtlQWPcM='
     }
