@@ -20,7 +20,6 @@
     "async": "^0.9.0",
     "bluebird": "^2.9.25",
     "documentdb": "^1.0.0",
-    "doqmentdb": "^0.3.1",
     "express": "^4.12.3",
     "kue": "^0.8.12",
     "kue-ui": "^0.1.0",
