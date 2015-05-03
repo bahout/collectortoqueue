@@ -4,28 +4,45 @@
 import {MasterSaver} from './MasterSaver';
 import MongoDb = require('mongodb');
 import  Promise = require('bluebird');
+var mongodb = Promise.promisifyAll(require('mongodb'));
 
 var MongoClient = MongoDb.MongoClient;
 
 export class MongoSaver extends MasterSaver {
     url;
     db;
+    err;
+    collectionName;
 
     constructor(config) {
         this.url = 'mongodb://' + config.host + ':' + config.port + '/' + config.db;
         super()
     }
 
-    init() {
+    init(collectionName) {
+        this.collectionName = collectionName
         return new Promise((resolve, reject)=> {
             console.log('this.url', this.url);
-            MongoClient.connect(this.url, (err, db) => {
+            return mongodb.connectAsync(this.url).then((db) => {
+                console.log('Mongo init done ==>', db);
                 this.db = db;
-                resolve()
-            })
+                return resolve()
+
+            }).catch(mongodb.MongoError, function (e) {
+                throw new Error('Unable to connect to database: "' + e + '"');
+            });
         })
     }
 
+    dummy() {
+        return ()=> {
+            return new Promise((resolve, reject)=> {
+                console.log('resolve');
+                resolve()
+            })
+        }
+
+    }
 
     disconnect() {
         return () => {
@@ -36,9 +53,9 @@ export class MongoSaver extends MasterSaver {
     }
 
 
-    insertDocuments(collectionName:string, data:Array<any>) {
+    insertDocuments(data:Array<any>) {
         return new Promise((resolve, reject)=> {
-            var collection = this.db.collection(collectionName);
+            var collection = this.db.collection(this.collectionName);
             // Insert some documents
             collection.insert(data, (err, result)=> {
                 if (result) return resolve(result);
@@ -47,9 +64,9 @@ export class MongoSaver extends MasterSaver {
         })
     }
 
-    updateDocuments(collectionName:string, where:JSON, data:JSON) {
+    updateDocuments(where:JSON, data:JSON) {
         return new Promise((resolve, reject)=> {
-            var collection = this.db.collection(collectionName);
+            var collection = this.db.collection(this.collectionName);
             // Insert some documents
             collection.update({where}, {$set: data}, {upsert: true}, (err, result)=> {
                 if (result) return resolve(result);

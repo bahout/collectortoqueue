@@ -10,6 +10,7 @@ var __extends = this.__extends || function (d, b) {
 var MasterSaver_1 = require('./MasterSaver');
 var MongoDb = require('mongodb');
 var Promise = require('bluebird');
+var mongodb = Promise.promisifyAll(require('mongodb'));
 var MongoClient = MongoDb.MongoClient;
 var MongoSaver = (function (_super) {
     __extends(MongoSaver, _super);
@@ -17,15 +18,27 @@ var MongoSaver = (function (_super) {
         this.url = 'mongodb://' + config.host + ':' + config.port + '/' + config.db;
         _super.call(this);
     }
-    MongoSaver.prototype.init = function () {
+    MongoSaver.prototype.init = function (collectionName) {
         var _this = this;
+        this.collectionName = collectionName;
         return new Promise(function (resolve, reject) {
             console.log('this.url', _this.url);
-            MongoClient.connect(_this.url, function (err, db) {
+            return mongodb.connectAsync(_this.url).then(function (db) {
+                console.log('Mongo init done ==>', db);
                 _this.db = db;
-                resolve();
+                return resolve();
+            }).catch(mongodb.MongoError, function (e) {
+                throw new Error('Unable to connect to database: "' + e + '"');
             });
         });
+    };
+    MongoSaver.prototype.dummy = function () {
+        return function () {
+            return new Promise(function (resolve, reject) {
+                console.log('resolve');
+                resolve();
+            });
+        };
     };
     MongoSaver.prototype.disconnect = function () {
         var _this = this;
@@ -35,10 +48,10 @@ var MongoSaver = (function (_super) {
             });
         };
     };
-    MongoSaver.prototype.insertDocuments = function (collectionName, data) {
+    MongoSaver.prototype.insertDocuments = function (data) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var collection = _this.db.collection(collectionName);
+            var collection = _this.db.collection(_this.collectionName);
             // Insert some documents
             collection.insert(data, function (err, result) {
                 if (result)
@@ -48,10 +61,10 @@ var MongoSaver = (function (_super) {
             });
         });
     };
-    MongoSaver.prototype.updateDocuments = function (collectionName, where, data) {
+    MongoSaver.prototype.updateDocuments = function (where, data) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var collection = _this.db.collection(collectionName);
+            var collection = _this.db.collection(_this.collectionName);
             // Insert some documents
             collection.update({ where: where }, { $set: data }, { upsert: true }, function (err, result) {
                 if (result)
