@@ -78,6 +78,7 @@ var DocumentDbSaver = (function (_super) {
         var counter = 0;
         this.client.createDocument(collectionLink, data, function (err, created) {
             if (err) {
+                console.log('error', err);
                 _this.handleError(err);
             }
             console.log('Document with id \'' + created.id + '\' created.');

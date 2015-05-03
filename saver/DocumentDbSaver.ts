@@ -82,6 +82,7 @@ export class DocumentDbSaver extends MasterSaver {
 
         this.client.createDocument(collectionLink, data, (err, created)=> {
             if (err) {
+                console.log('error',err)
                 this.handleError(err);
             }
             console.log('Document with id \'' + created.id + '\' created.');
