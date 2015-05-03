@@ -19,6 +19,7 @@ export class DocumentDbSaver extends MasterSaver {
     dbName;
     db_self;
     col_self;
+    doc_self;
 
     constructor(config:JSON) {
         var host = config.endpoint;
@@ -41,53 +42,102 @@ export class DocumentDbSaver extends MasterSaver {
         })
     }
 
-    insertDocuments(data:Array<any>) {
+    updateDocuments(where:JSON, data:Array<any>) {
         return new Promise((resolve, reject)=> {
-            this._insertDocuments(data, this.col_self, ()=> {
-                resolve();
-            })
+            //console.log(data.id)
+
+            this.getDocumentById(this.col_self, where.id)
+                .then(() => {
+                    return this._updateDocument(this.doc_self, data)
+
+                }).
+                then(function () {
+                    return resolve();
+                })
+                .catch((e) => {
+                    return this._insertDocuments(this.col_self, data)
+                        .then(()=> {
+                            return resolve()
+                        }).catch((e)=> {
+                            console.log('ERROR in ====>', data, e);
+                            this.updateDocuments(where, data);
+
+                        })
+                });
+
+
         })
     }
 
 
-    getDocumentById(collectionLink, id, callback) {
-        var querySpec = {
-            query: 'SELECT * FROM Families f WHERE  f.id = @id',
-            parameters: [
-                {
-                    name: '@id',
-                    value: id
-                }
-            ]
-        };
-        this.client.queryDocuments(collectionLink, querySpec).toArray((err, results)=> {
-            if (err) {
-                this.handleError(err);
-            }
+    getDocumentById(collectionLink, id) {
+        return new Promise((resolve, reject)=> {
 
-            if (results.length === 0) {
-                throw ("No document found with id matching '" + id + "'");
-            } else if (results.length > 1) {
-                throw ("More than one document found matching id '" + id + "'");
-            } else {
-                callback(results[0]);
-            }
-        });
+            var querySpec = {
+                query: 'SELECT * FROM Families f WHERE  f.id = @id',
+                parameters: [
+                    {
+                        name: '@id',
+                        value: id
+                    }
+                ]
+            };
+            this.client.queryDocuments(collectionLink, querySpec).toArray((err, results)=> {
+                //console.log('queryDocuments', err, results)
+                if (err) {
+                    //this.handleError(err);
+                    reject()
+                }
+
+                if (results.length === 0) {
+                    //throw ("No document found with id matching '" + id + "'");
+                    reject()
+                } else if (results.length > 1) {
+                    //throw ("More than one document found matching id '" + id + "'");
+                    reject()
+                } else {
+                    //console.log('document found ===>', results[0]);
+                    this.doc_self = results[0]._self;
+                    resolve()
+                }
+            });
+        })
     }
 
+    _insertDocuments(collectionLink, data) {
+        return new Promise((resolve, reject)=> {
+            var createdList = [];
+            var counter = 0;
 
-    _insertDocuments(data, collectionLink, callback) {
-        var createdList = [];
-        var counter = 0;
+            this.client.createDocument(collectionLink, data, (err, created)=> {
+                if (err) {
+                    //console.log('error in _insertDocuments', created, err);
+                    return reject();
 
-        this.client.createDocument(collectionLink, data, (err, created)=> {
-            if (err) {
-                console.log('error',err)
-                this.handleError(err);
-            }
-            console.log('Document with id \'' + created.id + '\' created.');
-            callback()
-        });
+                }
+                {
+                    console.log('Document with id \'' + created.id + '\' created.');
+                    resolve()
+                }
+            });
+        })
+    }
+
+    _updateDocument(doc_self, data) {
+        return new Promise((resolve, reject)=> {
+            this.client.replaceDocument(doc_self, data, (err, updated)=> {
+                if (err) {
+                    console.log('update is a failure', err);
+                    return reject();
+
+                }
+                else {
+                    console.log('upadate is a success ' + updated.id);
+                    return resolve();
+                }
+
+            })
+        })
     }
 
 

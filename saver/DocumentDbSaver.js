@@ -38,51 +38,92 @@ var DocumentDbSaver = (function (_super) {
             });
         });
     };
-    DocumentDbSaver.prototype.insertDocuments = function (data) {
+    DocumentDbSaver.prototype.updateDocuments = function (where, data) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            _this._insertDocuments(data, _this.col_self, function () {
-                resolve();
+            //console.log(data.id)
+            _this.getDocumentById(_this.col_self, where.id)
+                .then(function () {
+                return _this._updateDocument(_this.doc_self, data);
+            }).
+                then(function () {
+                return resolve();
+            })
+                .catch(function (e) {
+                return _this._insertDocuments(_this.col_self, data)
+                    .then(function () {
+                    return resolve();
+                }).catch(function (e) {
+                    console.log('ERROR in ====>', data, e);
+                    _this.updateDocuments(where, data);
+                });
             });
         });
     };
-    DocumentDbSaver.prototype.getDocumentById = function (collectionLink, id, callback) {
+    DocumentDbSaver.prototype.getDocumentById = function (collectionLink, id) {
         var _this = this;
-        var querySpec = {
-            query: 'SELECT * FROM Families f WHERE  f.id = @id',
-            parameters: [
-                {
-                    name: '@id',
-                    value: id
+        return new Promise(function (resolve, reject) {
+            var querySpec = {
+                query: 'SELECT * FROM Families f WHERE  f.id = @id',
+                parameters: [
+                    {
+                        name: '@id',
+                        value: id
+                    }
+                ]
+            };
+            _this.client.queryDocuments(collectionLink, querySpec).toArray(function (err, results) {
+                //console.log('queryDocuments', err, results)
+                if (err) {
+                    //this.handleError(err);
+                    reject();
                 }
-            ]
-        };
-        this.client.queryDocuments(collectionLink, querySpec).toArray(function (err, results) {
-            if (err) {
-                _this.handleError(err);
-            }
-            if (results.length === 0) {
-                throw ("No document found with id matching '" + id + "'");
-            }
-            else if (results.length > 1) {
-                throw ("More than one document found matching id '" + id + "'");
-            }
-            else {
-                callback(results[0]);
-            }
+                if (results.length === 0) {
+                    //throw ("No document found with id matching '" + id + "'");
+                    reject();
+                }
+                else if (results.length > 1) {
+                    //throw ("More than one document found matching id '" + id + "'");
+                    reject();
+                }
+                else {
+                    //console.log('document found ===>', results[0]);
+                    _this.doc_self = results[0]._self;
+                    resolve();
+                }
+            });
         });
     };
-    DocumentDbSaver.prototype._insertDocuments = function (data, collectionLink, callback) {
+    DocumentDbSaver.prototype._insertDocuments = function (collectionLink, data) {
         var _this = this;
-        var createdList = [];
-        var counter = 0;
-        this.client.createDocument(collectionLink, data, function (err, created) {
-            if (err) {
-                console.log('error', err);
-                _this.handleError(err);
-            }
-            console.log('Document with id \'' + created.id + '\' created.');
-            callback();
+        return new Promise(function (resolve, reject) {
+            var createdList = [];
+            var counter = 0;
+            _this.client.createDocument(collectionLink, data, function (err, created) {
+                if (err) {
+                    //console.log('error in _insertDocuments', created, err);
+                    return reject();
+                }
+                {
+                    console.log('Document with id \'' + created.id + '\' created.');
+                    resolve();
+                }
+            });
+        });
+    };
+    DocumentDbSaver.prototype._updateDocument = function (doc_self, data) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this.client.replaceDocument(doc_self, data, function (err, updated) {
+                if (err) {
+                    console.log('update is a failure', err);
+                    return reject();
+                }
+                else {
+                    console.log('upadate is a success ' + updated.id);
+                    return resolve();
+                }
+            });
         });
     };
     DocumentDbSaver.prototype.getOrCreateDatabase = function (databaseId, callback) {
