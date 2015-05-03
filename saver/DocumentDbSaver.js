@@ -8,21 +8,22 @@ var __extends = this.__extends || function (d, b) {
  * Created by nicolasbahout on 02/05/15.
  */
 var MasterSaver_1 = require('./MasterSaver');
-var DocumentClient = require('documentdb');
+var documentdb = require('documentdb');
 var Promise = require('bluebird');
+var DocumentClient = documentdb.DocumentClient;
 /**
  * Azure DocumentDb is very similar as Mongo
  */
-var DocumentDbSaverSaver = (function (_super) {
-    __extends(DocumentDbSaverSaver, _super);
-    function DocumentDbSaverSaver(config) {
+var DocumentDbSaver = (function (_super) {
+    __extends(DocumentDbSaver, _super);
+    function DocumentDbSaver(config) {
         var host = config.endpoint;
         var masterKey = config.key; // Add the massterkey of the endpoint
         this.dbName = config.db;
-        var client = new DocumentClient(host, { masterKey: masterKey });
+        this.client = new DocumentClient(host, { masterKey: masterKey });
         _super.call(this);
     }
-    DocumentDbSaverSaver.prototype.init = function (collectionName, dbName) {
+    DocumentDbSaver.prototype.init = function (collectionName, dbName) {
         var _this = this;
         if (dbName === void 0) { dbName = this.dbName; }
         if (!dbName)
@@ -37,20 +38,16 @@ var DocumentDbSaverSaver = (function (_super) {
             });
         });
     };
-    DocumentDbSaverSaver.prototype.insertDocuments = function (collectionName, data) {
+    DocumentDbSaver.prototype.insertDocuments = function (data) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var collection = _this.db.collection(collectionName);
-            // Insert some documents
-            collection.insert(data, function (err, result) {
-                if (result)
-                    return resolve(result);
-                if (err)
-                    return reject(err);
+            _this._insertDocuments(data, _this.col_self, function () {
+                resolve();
             });
         });
     };
-    DocumentDbSaverSaver.prototype.getDocumentById = function (collectionLink, id, callback) {
+    DocumentDbSaver.prototype.getDocumentById = function (collectionLink, id, callback) {
+        var _this = this;
         var querySpec = {
             query: 'SELECT * FROM Families f WHERE  f.id = @id',
             parameters: [
@@ -62,7 +59,7 @@ var DocumentDbSaverSaver = (function (_super) {
         };
         this.client.queryDocuments(collectionLink, querySpec).toArray(function (err, results) {
             if (err) {
-                this.handleError(err);
+                _this.handleError(err);
             }
             if (results.length === 0) {
                 throw ("No document found with id matching '" + id + "'");
@@ -75,25 +72,20 @@ var DocumentDbSaverSaver = (function (_super) {
             }
         });
     };
-    DocumentDbSaverSaver.prototype._insertDocuments = function (collectionLink, callback) {
+    DocumentDbSaver.prototype._insertDocuments = function (data, collectionLink, callback) {
+        var _this = this;
         var createdList = [];
         var counter = 0;
-        for (var i = 0; i < sampleDocuments.length; i++) {
-            var docDef = sampleDocuments[i];
-            this.client.createDocument(collectionLink, docDef, function (err, created) {
-                if (err) {
-                    this.handleError(err);
-                }
-                counter++;
-                createdList.push(created);
-                console.log('Document with id \'' + created.id + '\' created.');
-                if (counter === sampleDocuments.length - 1) {
-                    callback(createdList);
-                }
-            });
-        }
+        this.client.createDocument(collectionLink, data, function (err, created) {
+            if (err) {
+                _this.handleError(err);
+            }
+            console.log('Document with id \'' + created.id + '\' created.');
+            callback();
+        });
     };
-    DocumentDbSaverSaver.prototype.getOrCreateDatabase = function (databaseId, callback) {
+    DocumentDbSaver.prototype.getOrCreateDatabase = function (databaseId, callback) {
+        var _this = this;
         var querySpec = {
             query: 'SELECT * FROM root r WHERE r.id=@id',
             parameters: [
@@ -105,14 +97,14 @@ var DocumentDbSaverSaver = (function (_super) {
         };
         this.client.queryDatabases(querySpec).toArray(function (err, results) {
             if (err) {
-                this.handleError(err);
+                _this.handleError(err);
             }
             if (results.length === 0) {
                 console.log('Database \'' + databaseId + '\'not found');
                 var databaseDef = { id: databaseId };
-                this.client.createDatabase(databaseDef, function (err, created) {
+                _this.client.createDatabase(databaseDef, function (err, created) {
                     if (err) {
-                        this.handleError(err);
+                        _this.handleError(err);
                     }
                     console.log('Database \'' + databaseId + '\'created');
                     callback(created);
@@ -124,7 +116,8 @@ var DocumentDbSaverSaver = (function (_super) {
             }
         });
     };
-    DocumentDbSaverSaver.prototype.getOrCreateCollection = function (databaseLink, collectionId, callback) {
+    DocumentDbSaver.prototype.getOrCreateCollection = function (databaseLink, collectionId, callback) {
+        var _this = this;
         var querySpec = {
             query: 'SELECT * FROM root r WHERE r.id=@id',
             parameters: [
@@ -134,16 +127,17 @@ var DocumentDbSaverSaver = (function (_super) {
                 }
             ]
         };
-        this.client.queryCollections(databaseLink, querySpec).toArray(function (err, results) {
+        this.client.queryCollections(databaseLink, querySpec)
+            .toArray(function (err, results) {
             if (err) {
-                this.handleError(err);
+                _this.handleError(err);
             }
             if (results.length === 0) {
                 console.log('Collection \'' + collectionId + '\'not found');
                 var collectionDef = { id: collectionId };
-                this.client.createCollection(databaseLink, collectionDef, function (err, created) {
+                _this.client.createCollection(databaseLink, collectionDef, function (err, created) {
                     if (err) {
-                        this.handleError(err);
+                        _this.handleError(err);
                     }
                     console.log('Collection \'' + collectionId + '\'created');
                     callback(created);
@@ -155,10 +149,11 @@ var DocumentDbSaverSaver = (function (_super) {
             }
         });
     };
-    DocumentDbSaverSaver.prototype.deleteCollection = function (collection, callback) {
+    DocumentDbSaver.prototype.deleteCollection = function (collection, callback) {
+        var _this = this;
         this.client.deleteCollection(collection._self, function (err) {
             if (err) {
-                this.handleError(err);
+                _this.handleError(err);
             }
             else {
                 console.log('Collection \'' + collection.id + '\'deleted');
@@ -166,10 +161,11 @@ var DocumentDbSaverSaver = (function (_super) {
             }
         });
     };
-    DocumentDbSaverSaver.prototype.deleteDatabase = function (database, callback) {
+    DocumentDbSaver.prototype.deleteDatabase = function (database, callback) {
+        var _this = this;
         this.client.deleteDatabase(database._self, function (err) {
             if (err) {
-                this.handleError(err);
+                _this.handleError(err);
             }
             else {
                 console.log('Database \'' + database.id + '\'deleted');
@@ -177,14 +173,13 @@ var DocumentDbSaverSaver = (function (_super) {
             }
         });
     };
-    DocumentDbSaverSaver.prototype.handleError = function (error) {
+    DocumentDbSaver.prototype.handleError = function (error) {
         console.log();
         console.log('An error with code \'' + error.code + '\' has occurred:');
         console.log('\t' + JSON.parse(error.body).message);
         console.log();
-        finish();
     };
-    return DocumentDbSaverSaver;
+    return DocumentDbSaver;
 })(MasterSaver_1.MasterSaver);
-exports.DocumentDbSaverSaver = DocumentDbSaverSaver;
+exports.DocumentDbSaver = DocumentDbSaver;
 //# sourceMappingURL=DocumentDbSaver.js.map

@@ -2,15 +2,16 @@
  * Created by nicolasbahout on 02/05/15.
  */
 import {MasterSaver} from './MasterSaver';
-import DocumentClient  = require('documentdb');
+import documentdb  = require('documentdb')
 import  Promise = require('bluebird');
 
+var DocumentClient = documentdb.DocumentClient;
 
 /**
  * Azure DocumentDb is very similar as Mongo
  */
 
-export class DocumentDbSaverSaver extends MasterSaver {
+export class DocumentDbSaver extends MasterSaver {
     err;
     client;
     database;
@@ -23,7 +24,7 @@ export class DocumentDbSaverSaver extends MasterSaver {
         var host = config.endpoint;
         var masterKey = config.key;  // Add the massterkey of the endpoint
         this.dbName = config.db;
-        var client = new DocumentClient(host, {masterKey: masterKey});
+        this.client = new DocumentClient(host, {masterKey: masterKey});
         super()
     }
 
@@ -40,14 +41,11 @@ export class DocumentDbSaverSaver extends MasterSaver {
         })
     }
 
-    insertDocuments(collectionName:string, data:Array<any>) {
+    insertDocuments(data:Array<any>) {
         return new Promise((resolve, reject)=> {
-            var collection = this.db.collection(collectionName);
-            // Insert some documents
-            collection.insert(data, (err, result)=> {
-                if (result) return resolve(result);
-                if (err) return reject(err)
-            });
+            this._insertDocuments(data, this.col_self, ()=> {
+                resolve();
+            })
         })
     }
 
@@ -62,7 +60,7 @@ export class DocumentDbSaverSaver extends MasterSaver {
                 }
             ]
         };
-        this.client.queryDocuments(collectionLink, querySpec).toArray(function (err, results) {
+        this.client.queryDocuments(collectionLink, querySpec).toArray((err, results)=> {
             if (err) {
                 this.handleError(err);
             }
@@ -78,26 +76,17 @@ export class DocumentDbSaverSaver extends MasterSaver {
     }
 
 
-    _insertDocuments(collectionLink, callback) {
+    _insertDocuments(data, collectionLink, callback) {
         var createdList = [];
         var counter = 0;
-        for (var i = 0; i < sampleDocuments.length; i++) {
-            var docDef = sampleDocuments[i];
 
-            this.client.createDocument(collectionLink, docDef, function (err, created) {
-                if (err) {
-                    this.handleError(err);
-                }
-
-                counter++;
-
-                createdList.push(created);
-                console.log('Document with id \'' + created.id + '\' created.');
-                if (counter === sampleDocuments.length - 1) {
-                    callback(createdList);
-                }
-            });
-        }
+        this.client.createDocument(collectionLink, data, (err, created)=> {
+            if (err) {
+                this.handleError(err);
+            }
+            console.log('Document with id \'' + created.id + '\' created.');
+            callback()
+        });
     }
 
 
@@ -111,7 +100,7 @@ export class DocumentDbSaverSaver extends MasterSaver {
                 }
             ]
         };
-        this.client.queryDatabases(querySpec).toArray(function (err, results) {
+        this.client.queryDatabases(querySpec).toArray((err, results)=> {
             if (err) {
                 this.handleError(err);
             }
@@ -120,7 +109,7 @@ export class DocumentDbSaverSaver extends MasterSaver {
                 console.log('Database \'' + databaseId + '\'not found');
                 var databaseDef = {id: databaseId};
 
-                this.client.createDatabase(databaseDef, function (err, created) {
+                this.client.createDatabase(databaseDef, (err, created) => {
                     if (err) {
                         this.handleError(err);
                     }
@@ -146,33 +135,34 @@ export class DocumentDbSaverSaver extends MasterSaver {
                 }
             ]
         };
-        this.client.queryCollections(databaseLink, querySpec).toArray(function (err, results) {
-            if (err) {
-                this.handleError(err);
-            }
+        this.client.queryCollections(databaseLink, querySpec)
+            .toArray((err, results)=> {
+                if (err) {
+                    this.handleError(err);
+                }
 
-            if (results.length === 0) {
-                console.log('Collection \'' + collectionId + '\'not found');
-                var collectionDef = {id: collectionId};
+                if (results.length === 0) {
+                    console.log('Collection \'' + collectionId + '\'not found');
+                    var collectionDef = {id: collectionId};
 
-                this.client.createCollection(databaseLink, collectionDef, function (err, created) {
-                    if (err) {
-                        this.handleError(err);
-                    }
+                    this.client.createCollection(databaseLink, collectionDef, (err, created)=> {
+                        if (err) {
+                            this.handleError(err);
+                        }
 
-                    console.log('Collection \'' + collectionId + '\'created');
-                    callback(created);
-                });
-            } else {
-                console.log('Collection \'' + collectionId + '\'found');
-                callback(results[0]);
-            }
-        });
+                        console.log('Collection \'' + collectionId + '\'created');
+                        callback(created);
+                    });
+                } else {
+                    console.log('Collection \'' + collectionId + '\'found');
+                    callback(results[0]);
+                }
+            });
     }
 
 
     deleteCollection(collection, callback) {
-        this.client.deleteCollection(collection._self, function (err) {
+        this.client.deleteCollection(collection._self, (err)=> {
             if (err) {
                 this.handleError(err);
             } else {
@@ -184,7 +174,7 @@ export class DocumentDbSaverSaver extends MasterSaver {
 
 
     deleteDatabase(database, callback) {
-        this.client.deleteDatabase(database._self, function (err) {
+        this.client.deleteDatabase(database._self, (err) => {
             if (err) {
                 this.handleError(err);
             } else {
@@ -200,8 +190,6 @@ export class DocumentDbSaverSaver extends MasterSaver {
         console.log('An error with code \'' + error.code + '\' has occurred:');
         console.log('\t' + JSON.parse(error.body).message);
         console.log();
-
-        finish();
     }
 
 
