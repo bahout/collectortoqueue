@@ -39,7 +39,7 @@ export class JobKue extends JobMaster {
         this.queue.watchStuckJobs();
         this.name = 'JobKue';
 
-        //this.resolveStuckjob();
+        this.resolveStuckjob();
         this.end();
     }
 
@@ -146,39 +146,40 @@ export class JobKue extends JobMaster {
         }
     }
 
-    /*
-     resolveStuckjob(interval = 5000, maxTimeToExecute = 120000) {
-     setInterval(() => {
 
-     // first check the active job list (hopefully this is relatively small and cheap)
-     // if this takes longer than a single "interval" then we should consider using
-     // setTimeouts
-     this.queue.active((err, ids) => {
 
-     // for each id we're going to see how long ago the job was last "updated"
-     async.map(ids, function (id, cb) {
-     // we get the job info from redis
-     kue.Job.get(id, function (err, job) {
-     if (err) {
-     throw err;
-     } // let's think about what makes sense here
+    resolveStuckjob(interval = 5000, maxTimeToExecute = 120000) {
+        setInterval(() => {
 
-     // we compare the updated_at to current time.
-     var lastUpdate = +Date.now() - job.updated_at;
-     if (lastUpdate > maxTimeToExecute) {
-     console.log('job ' + job.id + 'hasnt been updated in' + lastUpdate);
-     this.task(job).then(()=> {
-     return 'done'
-     });  // either reschedule (re-attempt?) or remove the job.
-     } else {
-     cb(null);
-     }
+            // first check the active job list (hopefully this is relatively small and cheap)
+            // if this takes longer than a single "interval" then we should consider using
+            // setTimeouts
+            this.queue.active((err, ids) => {
 
-     });
-     });
-     });
-     }, interval);
-     }
-     */
+                // for each id we're going to see how long ago the job was last "updated"
+                async.map(ids, function (id, cb) {
+                    // we get the job info from redis
+                    kue.Job.get(id, function (err, job) {
+                        if (err) {
+                            throw err;
+                        } // let's think about what makes sense here
+
+                        // we compare the updated_at to current time.
+                        var lastUpdate = +Date.now() - job.updated_at;
+                        if (lastUpdate > maxTimeToExecute) {
+                            console.log('job ' + job.id + 'hasnt been updated in' + lastUpdate);
+                            this.task(job).then(()=> {
+                                return 'done'
+                            });  // either reschedule (re-attempt?) or remove the job.
+                        } else {
+                            cb(null);
+                        }
+
+                    });
+                });
+            });
+        }, interval);
+    }
+
 
 }

@@ -8,6 +8,7 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 var Promise = require('bluebird');
+var async = require('async');
 var JobMaster_1 = require('./JobMaster');
 var kue = require('kue');
 /**
@@ -33,7 +34,7 @@ var JobKue = (function (_super) {
         this.queue = kue.createQueue({ redis: redisconf });
         this.queue.watchStuckJobs();
         this.name = 'JobKue';
-        //this.resolveStuckjob();
+        this.resolveStuckjob();
         this.end();
     }
     JobKue.prototype.removeAll = function (type, status) {
@@ -119,6 +120,38 @@ var JobKue = (function (_super) {
                 process.exit(1);
             });
         }
+    };
+    JobKue.prototype.resolveStuckjob = function (interval, maxTimeToExecute) {
+        var _this = this;
+        if (interval === void 0) { interval = 5000; }
+        if (maxTimeToExecute === void 0) { maxTimeToExecute = 120000; }
+        setInterval(function () {
+            // first check the active job list (hopefully this is relatively small and cheap)
+            // if this takes longer than a single "interval" then we should consider using
+            // setTimeouts
+            _this.queue.active(function (err, ids) {
+                // for each id we're going to see how long ago the job was last "updated"
+                async.map(ids, function (id, cb) {
+                    // we get the job info from redis
+                    kue.Job.get(id, function (err, job) {
+                        if (err) {
+                            throw err;
+                        } // let's think about what makes sense here
+                        // we compare the updated_at to current time.
+                        var lastUpdate = +Date.now() - job.updated_at;
+                        if (lastUpdate > maxTimeToExecute) {
+                            console.log('job ' + job.id + 'hasnt been updated in' + lastUpdate);
+                            this.task(job).then(function () {
+                                return 'done';
+                            }); // either reschedule (re-attempt?) or remove the job.
+                        }
+                        else {
+                            cb(null);
+                        }
+                    });
+                });
+            });
+        }, interval);
     };
     return JobKue;
 })(JobMaster_1.JobMaster);
