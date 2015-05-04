@@ -7,20 +7,21 @@ import _ = require('lodash');
 import async = require('async');
 import {GetSqlData} from '../collector/GetSqlData';
 import {GetKueData} from '../collector/GetKueData';
+import {GetMongoData} from '../collector/GetMongoData';
 import {GetTxtData} from '../collector/GetTxtData';
 import {JobMaster} from '../job/JobMaster';
 import config= require('./../../config.json');
 
-var config = config.mysql;
+var config = config.mongoAzure;
 console.log('config', config);
 
 //define the source
 
 //var collector = new GetTxtData('../data/toto.txt');
-var collector = new GetSqlData('prestaleads', 'users', config);
+var collector = new GetMongoData('recommand', 'url', config);
 
 //nb of data collected
-collector.concurrency = 3;
+collector.concurrency = 100;
 
 
 collector
@@ -28,16 +29,17 @@ collector
     .then(collector.getData())
     .then(()=> {
         //we could do something with the data.
-        return console.log(_(collector.data).pluck('id').value())
+        return console.log(_(collector.data).pluck('_id').value())
     })
     .then(collector.getData())
     .then(()=> {
         //we could do something with the data.
-        return console.log(_(collector.data).pluck('id').value())
+        return console.log(_(collector.data).pluck('_id').value())
     })
+    .then(collector.getData())
     .then(()=> {
         //we could do something with the data.
-        return console.log(_(collector.data).pluck('id').value())
+        return console.log(_(collector.data).pluck('_id').value())
     })
     .then(collector.disconnect());
 /* .then(collector.getData())

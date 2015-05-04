@@ -55,8 +55,7 @@ var JobKue = (function (_super) {
             data = _this.dataTransform(data)
                 .then(function (data) {
                 return _this.queue.create(_this.type, data)
-                    .attempts(5)
-                    .removeOnComplete(_this.removeOnComplete)
+                    .attempts(2)
                     .save(function (err) {
                     if (!err) {
                         //console.log(job.id);
@@ -75,9 +74,11 @@ var JobKue = (function (_super) {
                 //console.log('start process 3', job.data);
                 _this.unitTask(job.data)
                     .then(function () {
-                    return done();
-                })
-                    .then(function () {
+                    done();
+                    return resolve();
+                }).catch(function (e) {
+                    console.log('error in task', e);
+                    done(new Error('error in task' + e));
                     return resolve();
                 });
             });

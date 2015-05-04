@@ -73,7 +73,7 @@ export class GetSqlData extends GetDataMaster {
             this.getElement(this.mysqlQuery)
                 .then(()=> {
                     //console.log(this.getElement, this.rows);
-                    this.data = this.data = this.rows;
+                    this.data = this.rows;
                     //console.log('this.rows ', _(this.rows).pluck('id').value());
                     resolve()
                 })

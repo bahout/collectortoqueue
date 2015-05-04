@@ -64,10 +64,10 @@ export class JobKue extends JobMaster {
                 .then((data)=> {
 
                     return this.queue.create(this.type, data)
-                        .attempts(5)
+                        .attempts(2)
                         //.priority(5)
                         //.delay(5)
-                        .removeOnComplete(this.removeOnComplete)
+                        //.removeOnComplete(this.removeOnComplete)
                         .save(function (err) {
                             if (!err) {
                                 //console.log(job.id);
@@ -91,9 +91,11 @@ export class JobKue extends JobMaster {
 
                 this.unitTask(job.data)
                     .then(()=> {
-                        return done()
-                    })
-                    .then(()=> {
+                        done();
+                        return resolve()
+                    }).catch((e)=> {
+                        console.log('error in task', e);
+                        done(new Error('error in task' + e));
                         return resolve()
                     })
             });

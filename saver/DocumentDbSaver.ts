@@ -59,7 +59,7 @@ export class DocumentDbSaver extends MasterSaver {
                         .then(()=> {
                             return resolve()
                         }).catch((e)=> {
-                            console.log('ERROR in ====>', data, e);
+                            console.log('update doc again ', where.id);
                             this.updateDocuments(where, data);
 
                         })
@@ -89,7 +89,7 @@ export class DocumentDbSaver extends MasterSaver {
                     reject()
                 }
 
-                if (results.length === 0) {
+                if (results == undefined || results.length === 0) {
                     //throw ("No document found with id matching '" + id + "'");
                     reject()
                 } else if (results.length > 1) {

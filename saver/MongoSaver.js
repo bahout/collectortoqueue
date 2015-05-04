@@ -14,12 +14,16 @@ var mongodb = Promise.promisifyAll(require('mongodb'));
 var MongoClient = MongoDb.MongoClient;
 var MongoSaver = (function (_super) {
     __extends(MongoSaver, _super);
-    function MongoSaver(config) {
-        this.url = 'mongodb://' + config.host + ':' + config.port + '/' + config.db;
+    function MongoSaver(database, collectionName, config) {
+        _super.call(this);
+        this.database = database;
+        this.collectionName = collectionName;
+        this.url = 'mongodb://' + config.host + ':' + config.port + '/' + database;
         _super.call(this);
     }
     MongoSaver.prototype.init = function (collectionName) {
         var _this = this;
+        if (collectionName === void 0) { collectionName = this.collectionName; }
         this.collectionName = collectionName;
         return new Promise(function (resolve, reject) {
             console.log('this.url', _this.url);
@@ -31,14 +35,6 @@ var MongoSaver = (function (_super) {
                 throw new Error('Unable to connect to database: "' + e + '"');
             });
         });
-    };
-    MongoSaver.prototype.dummy = function () {
-        return function () {
-            return new Promise(function (resolve, reject) {
-                console.log('resolve');
-                resolve();
-            });
-        };
     };
     MongoSaver.prototype.disconnect = function () {
         var _this = this;

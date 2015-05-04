@@ -2,30 +2,31 @@
  * Created by nicolasbahout on 26/04/15.
  */
 var _ = require('lodash');
-var GetSqlData_1 = require('../collector/GetSqlData');
+var GetMongoData_1 = require('../collector/GetMongoData');
 var config = require('./../../config.json');
-var config = config.mysql;
+var config = config.mongoAzure;
 console.log('config', config);
 //define the source
 //var collector = new GetTxtData('../data/toto.txt');
-var collector = new GetSqlData_1.GetSqlData('prestaleads', 'users', config);
+var collector = new GetMongoData_1.GetMongoData('recommand', 'url', config);
 //nb of data collected
-collector.concurrency = 3;
+collector.concurrency = 100;
 collector
     .init()
     .then(collector.getData())
     .then(function () {
     //we could do something with the data.
-    return console.log(_(collector.data).pluck('id').value());
+    return console.log(_(collector.data).pluck('_id').value());
 })
     .then(collector.getData())
     .then(function () {
     //we could do something with the data.
-    return console.log(_(collector.data).pluck('id').value());
+    return console.log(_(collector.data).pluck('_id').value());
 })
+    .then(collector.getData())
     .then(function () {
     //we could do something with the data.
-    return console.log(_(collector.data).pluck('id').value());
+    return console.log(_(collector.data).pluck('_id').value());
 })
     .then(collector.disconnect());
 /* .then(collector.getData())
@@ -36,4 +37,4 @@ collector
  });
 
  */
-//# sourceMappingURL=collectorMySqlExample.js.map
+//# sourceMappingURL=collectorMongoExample.js.map

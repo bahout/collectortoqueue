@@ -54,7 +54,7 @@ var DocumentDbSaver = (function (_super) {
                     .then(function () {
                     return resolve();
                 }).catch(function (e) {
-                    console.log('ERROR in ====>', data, e);
+                    console.log('update doc again ', where.id);
                     _this.updateDocuments(where, data);
                 });
             });
@@ -78,7 +78,7 @@ var DocumentDbSaver = (function (_super) {
                     //this.handleError(err);
                     reject();
                 }
-                if (results.length === 0) {
+                if (results == undefined || results.length === 0) {
                     //throw ("No document found with id matching '" + id + "'");
                     reject();
                 }

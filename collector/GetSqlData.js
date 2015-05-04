@@ -66,7 +66,7 @@ var GetSqlData = (function (_super) {
             _this.getElement(_this.mysqlQuery)
                 .then(function () {
                 //console.log(this.getElement, this.rows);
-                _this.data = _this.data = _this.rows;
+                _this.data = _this.rows;
                 //console.log('this.rows ', _(this.rows).pluck('id').value());
                 resolve();
             });

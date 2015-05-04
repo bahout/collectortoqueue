@@ -12,15 +12,15 @@ export class MongoSaver extends MasterSaver {
     url;
     db;
     err;
-    collectionName;
 
-    constructor(config) {
-        this.url = 'mongodb://' + config.host + ':' + config.port + '/' + config.db;
+    constructor(public database, public collectionName, config) {
+        super();
+        this.url = 'mongodb://' + config.host + ':' + config.port + '/' + database;
         super()
     }
 
-    init(collectionName) {
-        this.collectionName = collectionName
+    init(collectionName = this.collectionName) {
+        this.collectionName = collectionName;
         return new Promise((resolve, reject)=> {
             console.log('this.url', this.url);
             return mongodb.connectAsync(this.url).then((db) => {
@@ -34,15 +34,6 @@ export class MongoSaver extends MasterSaver {
         })
     }
 
-    dummy() {
-        return ()=> {
-            return new Promise((resolve, reject)=> {
-                console.log('resolve');
-                resolve()
-            })
-        }
-
-    }
 
     disconnect() {
         return () => {
