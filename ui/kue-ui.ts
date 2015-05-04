@@ -12,6 +12,7 @@ export class Ui2 {
     constructor(redisconf, port = 3001) {
         console.log(redisconf);
         kue.createQueue({redis: redisconf});
+
         ui.setup({
             apiURL: '/api', // IMPORTANT: specify the api url
             baseURL: '/kue', // IMPORTANT: specify the base url

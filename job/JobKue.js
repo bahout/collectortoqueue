@@ -31,7 +31,10 @@ var JobKue = (function (_super) {
         this.type = 'url';
         this.removeOnComplete = true;
         this.queue = kue.createQueue({ redis: redisconf });
+        this.queue.watchStuckJobs();
         this.name = 'JobKue';
+        //this.resolveStuckjob();
+        this.end();
     }
     JobKue.prototype.removeAll = function (type, status) {
         if (status === void 0) { status = 'inactive'; }
@@ -89,6 +92,33 @@ var JobKue = (function (_super) {
         return new Promise(function (resolve, reject) {
             resolve();
         });
+    };
+    JobKue.prototype.end = function () {
+        console.log('spy event uncaughtException and SIGTERM');
+        process.on('uncaughtException', function (err) {
+            console.log.error('uncaught exception', err.stack);
+            this.die();
+            this.dying = true;
+        });
+        process.on('SIGTERM', function () {
+            console.log('SIGTERM');
+            this.die();
+            this.dying = true;
+        });
+    };
+    JobKue.prototype.die = function () {
+        console.log('in die');
+        if (!this.dying) {
+            this.queue.shutdown(function (err) {
+                if (err) {
+                    log.error('Kue DID NOT shutdown gracefully', err);
+                }
+                else {
+                    log.info('Kue DID shutdown gracefully');
+                }
+                process.exit(1);
+            });
+        }
     };
     return JobKue;
 })(JobMaster_1.JobMaster);

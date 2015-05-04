@@ -24,6 +24,7 @@ export class JobKue extends JobMaster {
     collector;
     queue;
     type = 'url';
+    dying;
     removeOnComplete = true;
     //messages
     /**
@@ -35,7 +36,11 @@ export class JobKue extends JobMaster {
     constructor(redisconf, collector?) {
         super(collector);
         this.queue = kue.createQueue({redis: redisconf});
+        this.queue.watchStuckJobs();
         this.name = 'JobKue';
+
+        //this.resolveStuckjob();
+        this.end();
     }
 
 
@@ -81,7 +86,6 @@ export class JobKue extends JobMaster {
         })
     }
 
-
     execTask(type) {
         //console.log('start process');
         return new Promise((resolve, reject)=> {
@@ -110,5 +114,71 @@ export class JobKue extends JobMaster {
         })
     }
 
+
+    end() {
+        console.log('spy event uncaughtException and SIGTERM');
+
+        process.on('uncaughtException', function (err) {
+            console.log.error('uncaught exception', err.stack);
+            this.die();
+            this.dying = true;
+        });
+
+        process.on('SIGTERM', function () {
+            console.log('SIGTERM');
+            this.die();
+            this.dying = true;
+        });
+    }
+
+    die() {
+        console.log('in die');
+        if (!this.dying) {
+            this.queue.shutdown((err) => {
+                if (err) {
+                    log.error('Kue DID NOT shutdown gracefully', err);
+                }
+                else {
+                    log.info('Kue DID shutdown gracefully');
+                }
+                process.exit(1);
+            })
+        }
+    }
+
+    /*
+     resolveStuckjob(interval = 5000, maxTimeToExecute = 120000) {
+     setInterval(() => {
+
+     // first check the active job list (hopefully this is relatively small and cheap)
+     // if this takes longer than a single "interval" then we should consider using
+     // setTimeouts
+     this.queue.active((err, ids) => {
+
+     // for each id we're going to see how long ago the job was last "updated"
+     async.map(ids, function (id, cb) {
+     // we get the job info from redis
+     kue.Job.get(id, function (err, job) {
+     if (err) {
+     throw err;
+     } // let's think about what makes sense here
+
+     // we compare the updated_at to current time.
+     var lastUpdate = +Date.now() - job.updated_at;
+     if (lastUpdate > maxTimeToExecute) {
+     console.log('job ' + job.id + 'hasnt been updated in' + lastUpdate);
+     this.task(job).then(()=> {
+     return 'done'
+     });  // either reschedule (re-attempt?) or remove the job.
+     } else {
+     cb(null);
+     }
+
+     });
+     });
+     });
+     }, interval);
+     }
+     */
 
 }

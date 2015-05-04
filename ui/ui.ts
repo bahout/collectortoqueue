@@ -7,6 +7,7 @@ export class Ui {
 
     constructor(redisconf, port = 3000) {
         var jobs = kue.createQueue({redis: redisconf});
+
         kue.app.listen(port);
         console.log('server is running in port ' + port)
     }
