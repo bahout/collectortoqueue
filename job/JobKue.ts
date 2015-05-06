@@ -56,7 +56,6 @@ export class JobKue extends JobMaster {
     }
 
 
-
     /**
      * Send Task
      * @param data
@@ -91,59 +90,60 @@ export class JobKue extends JobMaster {
      * @param type
      */
     execTask(type) {
-        //console.log('start process');
+        console.log('startprocess execTask');
         return new Promise((resolve, reject)=> {
-            //console.log('start process 2', this.queue);
+            console.log('concurrency ==', this.concurrency);
             this.queue.process(type, this.concurrency, (job, done) => {
-                //console.log('start process 3', job.data);
+                console.log('start process =', job.data);
 
                 this.unitTask(job.data)
                     .then(()=> {
                         done();
-                        return resolve()
+                        //return resolve()
                     }).catch((e)=> {
                         console.log('error in task', e);
-                        done(new Error('error in task' + e));
-                        return resolve()
+                        //done(new Error('error in task' + e));
+                        done(new Error('error in task'));
+                        //return resolve()
                     })
             });
-            resolve()
+            //resolve()
         })
 
     }
 
 
     /*
-        execTask(type) {
-            //console.log('start process');
-            return new Promise((resolve, reject)=> {
-                //console.log('start process 2', this.queue);
-                this.queue.process(type, this.concurrency, (job, done) => {
-                    //console.log('start process 3', job.data);
+     execTask(type) {
+     //console.log('start process');
+     return new Promise((resolve, reject)=> {
+     //console.log('start process 2', this.queue);
+     this.queue.process(type, this.concurrency, (job, done) => {
+     //console.log('start process 3', job.data);
 
-                    this.unitTask(job.data)
-                        .then(()=> {
-                            done();
-                            return resolve()
-                        }).catch((e)=> {
-                            console.log('error in task', e);
-                            done(new Error('error in task' + e));
-                            return resolve()
-                        })
-                });
-                resolve()
-            })
+     this.unitTask(job.data)
+     .then(()=> {
+     done();
+     return resolve()
+     }).catch((e)=> {
+     console.log('error in task', e);
+     done(new Error('error in task' + e));
+     return resolve()
+     })
+     });
+     resolve()
+     })
 
-        }
-    */
+     }
+     */
 
-/*
-    unitTask(job) {
-        return new Promise((resolve, reject)=> {
-            resolve();
-        })
-    }
-*/
+    /*
+     unitTask(job) {
+     return new Promise((resolve, reject)=> {
+     resolve();
+     })
+     }
+     */
 
 
     end() {
@@ -178,7 +178,6 @@ export class JobKue extends JobMaster {
     }
 
 
-
     resolveStuckjob(interval = 5000, maxTimeToExecute = 120000) {
         setInterval(() => {
 
@@ -204,9 +203,9 @@ export class JobKue extends JobMaster {
                                 return 'done'
                             });  // either reschedule (re-attempt?) or remove the job.
 
-                             job.remove((err) => {
+                            job.remove((err) => {
 
-                             })
+                            })
 
 
                         } else {
@@ -218,7 +217,6 @@ export class JobKue extends JobMaster {
             });
         }, interval);
     }
-
 
 
 }

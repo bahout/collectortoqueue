@@ -28,7 +28,7 @@ var MongoSaver = (function (_super) {
         return new Promise(function (resolve, reject) {
             console.log('this.url', _this.url);
             return mongodb.connectAsync(_this.url).then(function (db) {
-                console.log('Mongo init done ==>', db);
+                //console.log('Mongo init done ==>', db);
                 _this.db = db;
                 return resolve();
             }).catch(mongodb.MongoError, function (e) {

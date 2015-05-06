@@ -24,7 +24,7 @@ export class MongoSaver extends MasterSaver {
         return new Promise((resolve, reject)=> {
             console.log('this.url', this.url);
             return mongodb.connectAsync(this.url).then((db) => {
-                console.log('Mongo init done ==>', db);
+                //console.log('Mongo init done ==>', db);
                 this.db = db;
                 return resolve()
 

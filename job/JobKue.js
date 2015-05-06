@@ -74,54 +74,55 @@ var JobKue = (function (_super) {
      */
     JobKue.prototype.execTask = function (type) {
         var _this = this;
-        //console.log('start process');
+        console.log('startprocess execTask');
         return new Promise(function (resolve, reject) {
-            //console.log('start process 2', this.queue);
+            console.log('concurrency ==', _this.concurrency);
             _this.queue.process(type, _this.concurrency, function (job, done) {
-                //console.log('start process 3', job.data);
+                console.log('start process =', job.data);
                 _this.unitTask(job.data)
                     .then(function () {
                     done();
-                    return resolve();
+                    //return resolve()
                 }).catch(function (e) {
                     console.log('error in task', e);
-                    done(new Error('error in task' + e));
-                    return resolve();
+                    //done(new Error('error in task' + e));
+                    done(new Error('error in task'));
+                    //return resolve()
                 });
             });
-            resolve();
+            //resolve()
         });
     };
     /*
-        execTask(type) {
-            //console.log('start process');
-            return new Promise((resolve, reject)=> {
-                //console.log('start process 2', this.queue);
-                this.queue.process(type, this.concurrency, (job, done) => {
-                    //console.log('start process 3', job.data);
+     execTask(type) {
+     //console.log('start process');
+     return new Promise((resolve, reject)=> {
+     //console.log('start process 2', this.queue);
+     this.queue.process(type, this.concurrency, (job, done) => {
+     //console.log('start process 3', job.data);
 
-                    this.unitTask(job.data)
-                        .then(()=> {
-                            done();
-                            return resolve()
-                        }).catch((e)=> {
-                            console.log('error in task', e);
-                            done(new Error('error in task' + e));
-                            return resolve()
-                        })
-                });
-                resolve()
-            })
+     this.unitTask(job.data)
+     .then(()=> {
+     done();
+     return resolve()
+     }).catch((e)=> {
+     console.log('error in task', e);
+     done(new Error('error in task' + e));
+     return resolve()
+     })
+     });
+     resolve()
+     })
 
-        }
-    */
+     }
+     */
     /*
-        unitTask(job) {
-            return new Promise((resolve, reject)=> {
-                resolve();
-            })
-        }
-    */
+     unitTask(job) {
+     return new Promise((resolve, reject)=> {
+     resolve();
+     })
+     }
+     */
     JobKue.prototype.end = function () {
         var _this = this;
         console.log('spy event uncaughtException and SIGTERM');

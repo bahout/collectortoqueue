@@ -1,6 +1,6 @@
 {
   "name": "collectortoqueue",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "get data from Source to another emplacement",
   "main": "app.js",
   "directories": {
