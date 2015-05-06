@@ -7,7 +7,6 @@ import _ = require('lodash');
 import async = require('async');
 import {JobMaster} from './JobMaster';
 import kue = require('kue');
-import sentinel = require('redis-sentinel');
 
 
 /**
@@ -39,7 +38,7 @@ export class JobKue extends JobMaster {
         this.queue.watchStuckJobs();
         this.name = 'JobKue';
 
-        this.resolveStuckjob();
+        //this.resolveStuckjob();
         this.end();
     }
 
@@ -56,12 +55,12 @@ export class JobKue extends JobMaster {
         });
     }
 
-    dataTransform(data) {
-        return new Promise((resolve, reject)=> {
-            return resolve(data);
-        })
-    }
 
+
+    /**
+     * Send Task
+     * @param data
+     */
     task(data) {
         return new Promise((resolve, reject)=> {
 
@@ -86,6 +85,11 @@ export class JobKue extends JobMaster {
         })
     }
 
+
+    /**
+     * Get Task and Executte
+     * @param type
+     */
     execTask(type) {
         //console.log('start process');
         return new Promise((resolve, reject)=> {
@@ -108,23 +112,50 @@ export class JobKue extends JobMaster {
 
     }
 
+
+    /*
+        execTask(type) {
+            //console.log('start process');
+            return new Promise((resolve, reject)=> {
+                //console.log('start process 2', this.queue);
+                this.queue.process(type, this.concurrency, (job, done) => {
+                    //console.log('start process 3', job.data);
+
+                    this.unitTask(job.data)
+                        .then(()=> {
+                            done();
+                            return resolve()
+                        }).catch((e)=> {
+                            console.log('error in task', e);
+                            done(new Error('error in task' + e));
+                            return resolve()
+                        })
+                });
+                resolve()
+            })
+
+        }
+    */
+
+/*
     unitTask(job) {
         return new Promise((resolve, reject)=> {
             resolve();
         })
     }
+*/
 
 
     end() {
         console.log('spy event uncaughtException and SIGTERM');
 
-        process.on('uncaughtException', function (err) {
-            console.log.error('uncaught exception', err.stack);
+        process.on('uncaughtException', (err) => {
+            console.log('uncaught exception', err.stack);
             this.die();
             this.dying = true;
         });
 
-        process.on('SIGTERM', function () {
+        process.on('SIGTERM', ()=> {
             console.log('SIGTERM');
             this.die();
             this.dying = true;
@@ -136,10 +167,10 @@ export class JobKue extends JobMaster {
         if (!this.dying) {
             this.queue.shutdown((err) => {
                 if (err) {
-                    log.error('Kue DID NOT shutdown gracefully', err);
+                    console.error('Kue DID NOT shutdown gracefully', err);
                 }
                 else {
-                    log.info('Kue DID shutdown gracefully');
+                    console.info('Kue DID shutdown gracefully');
                 }
                 process.exit(1);
             })
@@ -157,9 +188,9 @@ export class JobKue extends JobMaster {
             this.queue.active((err, ids) => {
 
                 // for each id we're going to see how long ago the job was last "updated"
-                async.map(ids, function (id, cb) {
+                async.map(ids, (id, cb) => {
                     // we get the job info from redis
-                    kue.Job.get(id, function (err, job) {
+                    kue.Job.get(id, (err, job) => {
                         if (err) {
                             throw err;
                         } // let's think about what makes sense here
@@ -167,10 +198,17 @@ export class JobKue extends JobMaster {
                         // we compare the updated_at to current time.
                         var lastUpdate = +Date.now() - job.updated_at;
                         if (lastUpdate > maxTimeToExecute) {
-                            console.log('job ' + job.id + 'hasnt been updated in' + lastUpdate);
+                            console.log('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
                             this.task(job).then(()=> {
+                                console.log('job.id', job.id);
                                 return 'done'
                             });  // either reschedule (re-attempt?) or remove the job.
+
+                             job.remove((err) => {
+
+                             })
+
+
                         } else {
                             cb(null);
                         }
@@ -180,6 +218,7 @@ export class JobKue extends JobMaster {
             });
         }, interval);
     }
+
 
 
 }

@@ -4,11 +4,9 @@
 var _ = require('lodash');
 var GetMongoData_1 = require('../collector/GetMongoData');
 var config = require('./../../config.json');
-var config = config.mongoAzure;
-console.log('config', config);
 //define the source
 //var collector = new GetTxtData('../data/toto.txt');
-var collector = new GetMongoData_1.GetMongoData('recommand', 'url', config);
+var collector = new GetMongoData_1.GetMongoData('cl-task', 'url', config.mongoAzure);
 //nb of data collected
 collector.concurrency = 100;
 collector

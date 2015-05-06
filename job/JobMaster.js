@@ -21,16 +21,24 @@ var JobMaster = (function () {
         this.collector = collector;
         this.concurrency = 2;
         this.name = 'JobMaster';
+        this.type = 'default';
         //this.collector = collector;
     }
-    JobMaster.prototype.init = function () {
+    JobMaster.prototype.init = function (type) {
         var _this = this;
+        if (type === void 0) { type = this.type; }
+        this.type = type;
         return new Promise(function (resolve, reject) {
             _this.collector.init()
                 .then(function () {
                 console.log('init.done');
                 resolve();
             });
+        });
+    };
+    JobMaster.prototype.unitTask = function (job) {
+        return new Promise(function (resolve, reject) {
+            resolve();
         });
     };
     JobMaster.prototype.exec = function () {
@@ -58,6 +66,7 @@ var JobMaster = (function () {
     };
     JobMaster.prototype._exec = function (data) {
         var _this = this;
+        console.log('add X task in the same time ==>', this.concurrency);
         return new Promise(function (resolve, reject) {
             //queue for task
             var q = async.queue(function (task, callback) {
@@ -80,6 +89,11 @@ var JobMaster = (function () {
             .then(this.collector.deleteOneData(job))
             .then(function () {
             cb();
+        });
+    };
+    JobMaster.prototype.dataTransform = function (data) {
+        return new Promise(function (resolve, reject) {
+            return resolve(data);
         });
     };
     JobMaster.prototype.task = function (job) {

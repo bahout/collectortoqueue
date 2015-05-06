@@ -8,6 +8,7 @@ import {GetMongoData} from './collector/GetMongoData';
 import {GetKueData} from './collector/GetKueData';
 import {GetTxtData} from './collector/GetTxtData';
 import {JobKue} from './job/JobKue';
+import {JobAzureKue} from './job/JobAzureKue';
 import {MongoSaver} from './saver/MongoSaver'
 import {DocumentDbSaver} from './saver/DocumentDbSaver'
 
@@ -23,7 +24,7 @@ module.exports = {
     JobKue: JobKue,
     MongoSaver: MongoSaver,
     DocumentDbSaver: DocumentDbSaver,
-
+    JobAzureKue: JobAzureKue,
     Ui: Ui,
     Ui2: Ui2
 

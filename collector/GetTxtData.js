@@ -65,7 +65,7 @@ var GetTxtData = (function (_super) {
             });
         });
     };
-    GetTxtData.prototype.getData = function (nbmessage) {
+    GetTxtData.prototype._getData = function (nbmessage) {
         var _this = this;
         if (nbmessage === void 0) { nbmessage = 1; }
         return function () {

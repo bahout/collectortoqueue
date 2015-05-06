@@ -7,7 +7,7 @@ import {GetDataMaster} from './GetDataMaster';
 import MongoDb = require('mongodb');
 import  Promise = require('bluebird');
 var mongodb = Promise.promisifyAll(require('mongodb'));
-
+import JsonDB = require('node-json-db');
 
 export class GetMongoData extends GetDataMaster {
     pool;
@@ -15,9 +15,9 @@ export class GetMongoData extends GetDataMaster {
     db;
     data = [];
     name;
+    txtdb;
     url;
     collection;
-    filter = {};
     rows:Array<any>;
     nbElements:number;
     mysqlCount:string;
@@ -29,7 +29,7 @@ export class GetMongoData extends GetDataMaster {
         super();
         console.log('object created');
         this.url = 'mongodb://' + config.host + ':' + config.port + '/' + database;
-        super()
+
     }
 
 
@@ -62,16 +62,19 @@ export class GetMongoData extends GetDataMaster {
 
     }
 
-    getData(nbmessage = 1) {
+
+
+
+    _getData(nbmessage = 1) {
         return ()=> {
             return new Promise((resolve, reject)=> {
                 //console.log('this.start =', this.start);
-                console.log(this.filter);
+                if (!this.filter) this.filter = {}
                 this.collection.find(this.filter, {limit: this.concurrency, skip: this.start}).toArray((err, docs)=> {
                     this.data = docs;
                     resolve();
                 });
-                this.start = this.concurrency + this.start;
+
             })
         }
     }

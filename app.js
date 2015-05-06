@@ -6,6 +6,7 @@ var GetMongoData_1 = require('./collector/GetMongoData');
 var GetKueData_1 = require('./collector/GetKueData');
 var GetTxtData_1 = require('./collector/GetTxtData');
 var JobKue_1 = require('./job/JobKue');
+var JobAzureKue_1 = require('./job/JobAzureKue');
 var MongoSaver_1 = require('./saver/MongoSaver');
 var DocumentDbSaver_1 = require('./saver/DocumentDbSaver');
 var ui_1 = require('./ui/ui');
@@ -18,6 +19,7 @@ module.exports = {
     JobKue: JobKue_1.JobKue,
     MongoSaver: MongoSaver_1.MongoSaver,
     DocumentDbSaver: DocumentDbSaver_1.DocumentDbSaver,
+    JobAzureKue: JobAzureKue_1.JobAzureKue,
     Ui: ui_1.Ui,
     Ui2: kue_ui_1.Ui2
 };

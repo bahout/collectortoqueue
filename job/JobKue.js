@@ -34,7 +34,7 @@ var JobKue = (function (_super) {
         this.queue = kue.createQueue({ redis: redisconf });
         this.queue.watchStuckJobs();
         this.name = 'JobKue';
-        this.resolveStuckjob();
+        //this.resolveStuckjob();
         this.end();
     }
     JobKue.prototype.removeAll = function (type, status) {
@@ -48,11 +48,10 @@ var JobKue = (function (_super) {
             });
         });
     };
-    JobKue.prototype.dataTransform = function (data) {
-        return new Promise(function (resolve, reject) {
-            return resolve(data);
-        });
-    };
+    /**
+     * Send Task
+     * @param data
+     */
     JobKue.prototype.task = function (data) {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -69,6 +68,10 @@ var JobKue = (function (_super) {
             });
         });
     };
+    /**
+     * Get Task and Executte
+     * @param type
+     */
     JobKue.prototype.execTask = function (type) {
         var _this = this;
         //console.log('start process');
@@ -89,22 +92,48 @@ var JobKue = (function (_super) {
             resolve();
         });
     };
-    JobKue.prototype.unitTask = function (job) {
-        return new Promise(function (resolve, reject) {
-            resolve();
-        });
-    };
+    /*
+        execTask(type) {
+            //console.log('start process');
+            return new Promise((resolve, reject)=> {
+                //console.log('start process 2', this.queue);
+                this.queue.process(type, this.concurrency, (job, done) => {
+                    //console.log('start process 3', job.data);
+
+                    this.unitTask(job.data)
+                        .then(()=> {
+                            done();
+                            return resolve()
+                        }).catch((e)=> {
+                            console.log('error in task', e);
+                            done(new Error('error in task' + e));
+                            return resolve()
+                        })
+                });
+                resolve()
+            })
+
+        }
+    */
+    /*
+        unitTask(job) {
+            return new Promise((resolve, reject)=> {
+                resolve();
+            })
+        }
+    */
     JobKue.prototype.end = function () {
+        var _this = this;
         console.log('spy event uncaughtException and SIGTERM');
         process.on('uncaughtException', function (err) {
-            console.log.error('uncaught exception', err.stack);
-            this.die();
-            this.dying = true;
+            console.log('uncaught exception', err.stack);
+            _this.die();
+            _this.dying = true;
         });
         process.on('SIGTERM', function () {
             console.log('SIGTERM');
-            this.die();
-            this.dying = true;
+            _this.die();
+            _this.dying = true;
         });
     };
     JobKue.prototype.die = function () {
@@ -112,10 +141,10 @@ var JobKue = (function (_super) {
         if (!this.dying) {
             this.queue.shutdown(function (err) {
                 if (err) {
-                    log.error('Kue DID NOT shutdown gracefully', err);
+                    console.error('Kue DID NOT shutdown gracefully', err);
                 }
                 else {
-                    log.info('Kue DID shutdown gracefully');
+                    console.info('Kue DID shutdown gracefully');
                 }
                 process.exit(1);
             });
@@ -140,10 +169,13 @@ var JobKue = (function (_super) {
                         // we compare the updated_at to current time.
                         var lastUpdate = +Date.now() - job.updated_at;
                         if (lastUpdate > maxTimeToExecute) {
-                            console.log('job ' + job.id + 'hasnt been updated in' + lastUpdate);
-                            this.task(job).then(function () {
+                            console.log('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
+                            _this.task(job).then(function () {
+                                console.log('job.id', job.id);
                                 return 'done';
                             }); // either reschedule (re-attempt?) or remove the job.
+                            job.remove(function (err) {
+                            });
                         }
                         else {
                             cb(null);

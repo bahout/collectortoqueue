@@ -1,9 +1,11 @@
-/**
+/*
+/!**
  * Send all sites to queue
- */
+ *!/
 
 //import azure = require('azure-storage');
-//import azure = require('azure');
+import azure = require('azure');
+import config= require('./../../config.json');
 import  Promise = require('bluebird');
 import _ = require('lodash');
 import {GetDataMaster} from './GetDataMaster';
@@ -29,7 +31,7 @@ export class GetKueData extends GetDataMaster {
         this.topic = topic;
         this.name = 'Kue';
         //this.queueSvc = azure.createServiceBusService(config.endpoint);
-        this.queueSvc = azure.createQueueService(config.storageName, config.storageKey);
+        this.queueSvc = azure.createQueueService(config.kueAzure.storageName, config.kueAzure.storageKey);
     }
 
     createTopic() {
@@ -137,11 +139,11 @@ export class GetKueData extends GetDataMaster {
         };
     }
 
-    /**
+    /!**
      * Delete Message
      * @param id
      * @returns {function(): Promise}
-     */
+     *!/
     deleteOneData(job) {
         return ()=> {
             return new Promise((resolve, reject)=> {
@@ -177,3 +179,4 @@ export class GetKueData extends GetDataMaster {
     }
 }
 
+*/

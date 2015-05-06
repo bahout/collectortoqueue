@@ -72,7 +72,7 @@ export class GetTxtData extends GetDataMaster {
     }
 
 
-    getData(nbmessage = 1) {
+    _getData(nbmessage = 1) {
         return ()=> {
             return new Promise((resolve, reject)=> {
                 this.data = GetTxtData.allData.splice(0, this.concurrency);

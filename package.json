@@ -1,6 +1,6 @@
 {
   "name": "collectortoqueue",
-  "version": "1.0.11",
+  "version": "1.0.15",
   "description": "get data from Source to another emplacement",
   "main": "app.js",
   "directories": {
@@ -18,6 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "async": "^0.9.0",
+    "azure": "^0.10.6",
     "bluebird": "^2.9.25",
     "documentdb": "^1.0.0",
     "express": "^4.12.3",
@@ -25,6 +26,7 @@
     "kue-ui": "^0.1.0",
     "lodash": "^3.8.0",
     "mongodb": "^2.0.28",
-    "mysql": "^2.6.2"
+    "mysql": "^2.6.2",
+    "node-json-db": "^0.4.5"
   }
 }

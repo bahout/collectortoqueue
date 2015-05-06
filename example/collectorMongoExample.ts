@@ -12,13 +12,11 @@ import {GetTxtData} from '../collector/GetTxtData';
 import {JobMaster} from '../job/JobMaster';
 import config= require('./../../config.json');
 
-var config = config.mongoAzure;
-console.log('config', config);
 
 //define the source
 
 //var collector = new GetTxtData('../data/toto.txt');
-var collector = new GetMongoData('recommand', 'url', config);
+var collector = new GetMongoData('cl-task', 'url', config.mongoAzure);
 
 //nb of data collected
 collector.concurrency = 100;

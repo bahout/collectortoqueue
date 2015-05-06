@@ -82,18 +82,16 @@ var GetSqlData = (function (_super) {
             });
         });
     };
-    GetSqlData.prototype.getData = function (nbmessage) {
+    GetSqlData.prototype._getData = function (nbmessage) {
         var _this = this;
         if (nbmessage === void 0) { nbmessage = 1; }
-        return function () {
-            return new Promise(function (resolve, reject) {
-                _this.mysqlExpression()
-                    .then(function () {
-                    resolve();
-                });
-                _this.start = _this.concurrency + _this.start;
+        return new Promise(function (resolve, reject) {
+            _this.mysqlExpression()
+                .then(function () {
+                resolve();
             });
-        };
+            //this.setLimit();
+        });
     };
     GetSqlData.prototype.deleteOneData = function (job) {
         var _this = this;

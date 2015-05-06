@@ -6,6 +6,7 @@ import mysql = require('mysql');
 import  Promise = require('bluebird');
 import _ = require('lodash');
 import {GetDataMaster} from './GetDataMaster';
+import JsonDB = require('node-json-db');
 
 
 Promise.promisifyAll(require('mysql/lib/Pool').prototype);
@@ -22,6 +23,7 @@ export class GetSqlData extends GetDataMaster {
     mysqlCount:string;
     mysqlQuery:string;
     start = 0;
+    txtdb;
 
 
     constructor(public database, public table, configMySql) {
@@ -35,6 +37,7 @@ export class GetSqlData extends GetDataMaster {
         this.table = table;
         this.name = 'GetSqlData';
         this.mysqlCount = 'SELECT count(*) FROM ' + this.table;
+
     }
 
 
@@ -92,17 +95,18 @@ export class GetSqlData extends GetDataMaster {
 
     }
 
-    getData(nbmessage = 1) {
-        return ()=> {
-            return new Promise((resolve, reject)=> {
-                this.mysqlExpression()
-                    .then(()=> {
-                        resolve()
-                    });
-                this.start = this.concurrency + this.start;
 
-            })
-        }
+
+    _getData(nbmessage = 1) {
+        return new Promise((resolve, reject)=> {
+            this.mysqlExpression()
+                .then(()=> {
+                    resolve()
+                });
+
+            //this.setLimit();
+        })
+
     }
 
 

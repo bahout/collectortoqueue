@@ -18,11 +18,9 @@ var GetMongoData = (function (_super) {
         this.database = database;
         this.collectionName = collectionName;
         this.data = [];
-        this.filter = {};
         this.start = 0;
         console.log('object created');
         this.url = 'mongodb://' + config.host + ':' + config.port + '/' + database;
-        _super.call(this);
     }
     GetMongoData.prototype.init = function (collectionName) {
         var _this = this;
@@ -50,18 +48,18 @@ var GetMongoData = (function (_super) {
             });
         });
     };
-    GetMongoData.prototype.getData = function (nbmessage) {
+    GetMongoData.prototype._getData = function (nbmessage) {
         var _this = this;
         if (nbmessage === void 0) { nbmessage = 1; }
         return function () {
             return new Promise(function (resolve, reject) {
                 //console.log('this.start =', this.start);
-                console.log(_this.filter);
+                if (!_this.filter)
+                    _this.filter = {};
                 _this.collection.find(_this.filter, { limit: _this.concurrency, skip: _this.start }).toArray(function (err, docs) {
                     _this.data = docs;
                     resolve();
                 });
-                _this.start = _this.concurrency + _this.start;
             });
         };
     };

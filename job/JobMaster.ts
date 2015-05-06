@@ -17,6 +17,7 @@ export class JobMaster {
     concurrency = 2;
     //getDataMaster;
     name;
+    type;
     static GetDataMaster;
     //messages
     /**
@@ -27,11 +28,13 @@ export class JobMaster {
      */
     constructor(public collector?) {
         this.name = 'JobMaster';
+        this.type = 'default';
         //this.collector = collector;
     }
 
 
-    init() {
+    init(type? = this.type) {
+        this.type = type;
         return new Promise((resolve, reject)=> {
             this.collector.init()
                 .then(()=> {
@@ -42,6 +45,12 @@ export class JobMaster {
 
     }
 
+
+    unitTask(job) {
+        return new Promise((resolve, reject)=> {
+            resolve();
+        })
+    }
 
     exec() {
         this.collector.concurrency = this.concurrency;
@@ -71,6 +80,7 @@ export class JobMaster {
     }
 
     _exec(data) {
+        console.log('add X task in the same time ==>', this.concurrency);
         return new Promise((resolve, reject)=> {
             //queue for task
             var q = async.queue((task, callback)=> {
@@ -102,6 +112,12 @@ export class JobMaster {
                 cb()
             })
 
+    }
+
+    dataTransform(data) {
+        return new Promise((resolve, reject)=> {
+            return resolve(data);
+        })
     }
 
     task(job) {
