@@ -34,7 +34,7 @@ export class JobKue extends JobMaster {
      */
     constructor(redisconf, collector?) {
         super(collector);
-        this.queue = kue.createQueue({redis: redisconf});
+        this.queue = kue.createQueue({redis: redisconf, disableSearch: true});
         this.queue.watchStuckJobs();
         this.name = 'JobKue';
 

@@ -31,7 +31,7 @@ var JobKue = (function (_super) {
         this.concurrency = 2;
         this.type = 'url';
         this.removeOnComplete = true;
-        this.queue = kue.createQueue({ redis: redisconf });
+        this.queue = kue.createQueue({ redis: redisconf, disableSearch: true });
         this.queue.watchStuckJobs();
         this.name = 'JobKue';
         //this.resolveStuckjob();
