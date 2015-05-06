@@ -91,6 +91,7 @@ export class JobKue extends JobMaster {
      */
     execTask(type) {
         console.log('startprocess execTask');
+        var count = 0;
         return new Promise((resolve, reject)=> {
             console.log('concurrency ==', this.concurrency);
             this.queue.process(type, this.concurrency, (job, done) => {
@@ -98,12 +99,20 @@ export class JobKue extends JobMaster {
 
                 this.unitTask(job.data)
                     .then(()=> {
+                        count++;
                         done();
+                        if (count == this.concurrency) resolve();
+
+                        // done();
                         //return resolve()
                     }).catch((e)=> {
+                        count++;
                         console.log('error in task', e);
-                        //done(new Error('error in task' + e));
                         done(new Error('error in task'));
+                        if (count == this.concurrency) resolve();
+
+                        //done(new Error('error in task' + e));
+                        // done(new Error('error in task'));
                         //return resolve()
                     })
             });

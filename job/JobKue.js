@@ -75,18 +75,27 @@ var JobKue = (function (_super) {
     JobKue.prototype.execTask = function (type) {
         var _this = this;
         console.log('startprocess execTask');
+        var count = 0;
         return new Promise(function (resolve, reject) {
             console.log('concurrency ==', _this.concurrency);
             _this.queue.process(type, _this.concurrency, function (job, done) {
                 console.log('start process =', job.data);
                 _this.unitTask(job.data)
                     .then(function () {
+                    count++;
                     done();
+                    if (count == _this.concurrency)
+                        resolve();
+                    // done();
                     //return resolve()
                 }).catch(function (e) {
+                    count++;
                     console.log('error in task', e);
-                    //done(new Error('error in task' + e));
                     done(new Error('error in task'));
+                    if (count == _this.concurrency)
+                        resolve();
+                    //done(new Error('error in task' + e));
+                    // done(new Error('error in task'));
                     //return resolve()
                 });
             });
