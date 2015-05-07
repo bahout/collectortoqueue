@@ -80,6 +80,7 @@ export class JobMaster {
     }
 
     _exec(data) {
+        var date = new Date();
         console.log('add X task in the same time ==>', this.concurrency);
         return new Promise((resolve, reject)=> {
             //queue for task
@@ -97,7 +98,7 @@ export class JobMaster {
 
             // assign a callback
             q.drain = ()=> {
-                console.log('all items have been processed');
+                console.log('all task have been add in ', new Date() - date);
                 resolve('done')
             }
 

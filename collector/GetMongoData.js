@@ -7,7 +7,6 @@ var __extends = this.__extends || function (d, b) {
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-var _ = require('lodash');
 var GetDataMaster_1 = require('./GetDataMaster');
 var Promise = require('bluebird');
 var mongodb = Promise.promisifyAll(require('mongodb'));
@@ -38,52 +37,27 @@ var GetMongoData = (function (_super) {
             });
         });
     };
-    GetMongoData.prototype.getElement = function (sqlExpression) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this.db.queryAsync(sqlExpression)
-                .spread(function (rows, columns) {
-                _this.rows = rows;
-                resolve();
-            });
-        });
-    };
     GetMongoData.prototype._getData = function (nbmessage) {
         var _this = this;
         if (nbmessage === void 0) { nbmessage = 1; }
-        return function () {
-            return new Promise(function (resolve, reject) {
-                //console.log('this.start =', this.start);
-                if (!_this.filter)
-                    _this.filter = {};
-                _this.collection.find(_this.filter, { limit: _this.concurrency, skip: _this.start }).toArray(function (err, docs) {
-                    _this.data = docs;
-                    resolve();
-                });
-            });
-        };
-    };
-    GetMongoData.prototype.deleteOneData = function (job) {
-        var _this = this;
-        return function () {
-            return new Promise(function (resolve, reject) {
-                //console.log('deleteMessage in', job.messagetext);
-                if (!job)
-                    return reject('job is require for deleteMessage(id)');
-                _this.data = _(_this.data)
-                    .map(function (currentObject) {
-                    //console.log('currentObject.id === job.id', currentObject.id === job.id);
-                    if (currentObject.id != job.id) {
-                        return currentObject;
-                    }
-                })
-                    .compact()
-                    .value();
-                //console.log('Kue.messages after remove  ==>', this.data);
+        return new Promise(function (resolve, reject) {
+            //console.log('this.start =', this.start);
+            if (!_this.filter)
+                _this.filter = {};
+            if (!_this.options)
+                _this.options = {};
+            //this.options = _.extend(this.options, {limit: this.concurrency, skip: this.start});
+            //console.log(this.options);
+            _this.collection
+                .find(_this.filter, _this.options)
+                .limit(_this.concurrency)
+                .skip(_this.start)
+                .toArray(function (err, docs) {
+                //console.log(docs);
+                _this.data = docs;
                 resolve();
-                // Message deleted
             });
-        };
+        });
     };
     GetMongoData.prototype.disconnect = function () {
         var _this = this;

@@ -8,7 +8,7 @@ var config = require('./../../config.json');
 //var collector = new GetTxtData('../data/toto.txt');
 var collector = new GetMongoData_1.GetMongoData('cl-task', 'url', config.mongoAzure);
 //nb of data collected
-collector.concurrency = 100;
+collector.concurrency = 20;
 collector
     .init()
     .then(collector.getData())
@@ -22,6 +22,23 @@ collector
     return console.log(_(collector.data).pluck('_id').value());
 })
     .then(collector.getData())
+    .then(function () {
+    //we could do something with the data.
+    return console.log(_(collector.data).pluck('_id').value());
+})
+    .then(collector.getData())
+    .then(function () {
+    //we could do something with the data.
+    return console.log(_(collector.data).pluck('_id').value());
+}).then(collector.getData())
+    .then(function () {
+    //we could do something with the data.
+    return console.log(_(collector.data).pluck('_id').value());
+}).then(collector.getData())
+    .then(function () {
+    //we could do something with the data.
+    return console.log(_(collector.data).pluck('_id').value());
+}).then(collector.getData())
     .then(function () {
     //we could do something with the data.
     return console.log(_(collector.data).pluck('_id').value());

@@ -66,6 +66,7 @@ var JobMaster = (function () {
     };
     JobMaster.prototype._exec = function (data) {
         var _this = this;
+        var date = new Date();
         console.log('add X task in the same time ==>', this.concurrency);
         return new Promise(function (resolve, reject) {
             //queue for task
@@ -79,7 +80,7 @@ var JobMaster = (function () {
             });
             // assign a callback
             q.drain = function () {
-                console.log('all items have been processed');
+                console.log('all task have been add in ', new Date() - date);
                 resolve('done');
             };
         });

@@ -23,6 +23,7 @@ export class GetMongoData extends GetDataMaster {
     mysqlCount:string;
     mysqlQuery:string;
     start = 0;
+    options;
 
 
     constructor(public database, public collectionName, config) {
@@ -51,58 +52,26 @@ export class GetMongoData extends GetDataMaster {
     }
 
 
-    getElement(sqlExpression) {
-        return new Promise((resolve, reject)=> {
-            this.db.queryAsync(sqlExpression)
-                .spread((rows, columns)=> {
-                    this.rows = rows;
-                    resolve()
-                });
-        })
-
-    }
-
-
-
-
     _getData(nbmessage = 1) {
-        return ()=> {
-            return new Promise((resolve, reject)=> {
-                //console.log('this.start =', this.start);
-                if (!this.filter) this.filter = {}
-                this.collection.find(this.filter, {limit: this.concurrency, skip: this.start}).toArray((err, docs)=> {
+        return new Promise((resolve, reject)=> {
+            //console.log('this.start =', this.start);
+            if (!this.filter) this.filter = {};
+            if (!this.options) this.options = {};
+
+            //this.options = _.extend(this.options, {limit: this.concurrency, skip: this.start});
+            //console.log(this.options);
+            this.collection
+                .find(this.filter, this.options)
+                .limit(this.concurrency)
+                .skip(this.start)
+                .toArray((err, docs)=> {
+                    //console.log(docs);
                     this.data = docs;
                     resolve();
                 });
 
-            })
-        }
-    }
+        })
 
-
-    deleteOneData(job) {
-        return ()=> {
-            return new Promise((resolve, reject)=> {
-                //console.log('deleteMessage in', job.messagetext);
-                if (!job) return reject('job is require for deleteMessage(id)');
-
-                this.data = _(this.data)
-                    .map(function (currentObject) {
-                        //console.log('currentObject.id === job.id', currentObject.id === job.id);
-                        if (currentObject.id != job.id) {
-                            return currentObject
-                        }
-                    })
-                    .compact()
-                    .value();
-
-                //console.log('Kue.messages after remove  ==>', this.data);
-
-                resolve();
-                // Message deleted
-
-            });
-        }
     }
 
 
