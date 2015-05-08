@@ -2,6 +2,7 @@
  * Created by nicolasbahout on 02/05/15.
  */
 var GetSqlData_1 = require('./collector/GetSqlData');
+var GetArrayData_1 = require('./collector/GetArrayData');
 var GetMongoData_1 = require('./collector/GetMongoData');
 var GetTxtData_1 = require('./collector/GetTxtData');
 var JobKue_1 = require('./job/JobKue');
@@ -13,6 +14,7 @@ module.exports = {
     GetSqlData: GetSqlData_1.GetSqlData,
     GetTxtData: GetTxtData_1.GetTxtData,
     GetMongoData: GetMongoData_1.GetMongoData,
+    GetArrayData: GetArrayData_1.GetArrayData,
     JobKue: JobKue_1.JobKue,
     MongoSaver: MongoSaver_1.MongoSaver,
     DocumentDbSaver: DocumentDbSaver_1.DocumentDbSaver,

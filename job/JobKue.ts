@@ -90,12 +90,12 @@ export class JobKue extends JobMaster {
      * @param type
      */
     execTask(type) {
-        //console.log('startprocess execTask');
+        console.log('startprocess execTask', type, this.concurrency);
         var count = 0;
         return new Promise((resolve, reject)=> {
             console.log('concurrency ==', this.concurrency);
             this.queue.process(type, this.concurrency, (job, done) => {
-                //console.log('start process =', job.data);
+                console.log('start process =', job.data);
 
                 this.unitTask(job.data)
                     .then(()=> {

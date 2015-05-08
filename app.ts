@@ -4,6 +4,8 @@
 
 
 import {GetSqlData} from './collector/GetSqlData';
+import {GetArrayData} from './collector/GetArrayData';
+
 import {GetMongoData} from './collector/GetMongoData';
 import {GetTxtData} from './collector/GetTxtData';
 import {JobKue} from './job/JobKue';
@@ -18,10 +20,10 @@ module.exports = {
     GetSqlData: GetSqlData,
     GetTxtData: GetTxtData,
     GetMongoData: GetMongoData,
+    GetArrayData: GetArrayData,
     JobKue: JobKue,
     MongoSaver: MongoSaver,
     DocumentDbSaver: DocumentDbSaver,
     Ui: Ui,
     Ui2: Ui2
-
 };

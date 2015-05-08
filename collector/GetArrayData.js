@@ -1,0 +1,38 @@
+/**
+ * Created by nicolasbahout on 26/04/15.
+ */
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var GetDataMaster_1 = require('./GetDataMaster');
+var Promise = require('bluebird');
+var mongodb = Promise.promisifyAll(require('mongodb'));
+var GetArrayData = (function (_super) {
+    __extends(GetArrayData, _super);
+    function GetArrayData(arr) {
+        _super.call(this);
+        this.data = [];
+        this.start = 0;
+        this.arr = arr;
+        console.log('collector created');
+    }
+    GetArrayData.prototype.init = function () {
+        return new Promise(function (resolve, reject) {
+            resolve();
+        });
+    };
+    GetArrayData.prototype._getData = function (nbmessage) {
+        var _this = this;
+        if (nbmessage === void 0) { nbmessage = 1; }
+        return new Promise(function (resolve, reject) {
+            _this.data = _this.arr.shift();
+            resolve();
+        });
+    };
+    return GetArrayData;
+})(GetDataMaster_1.GetDataMaster);
+exports.GetArrayData = GetArrayData;
+//# sourceMappingURL=GetArrayData.js.map
