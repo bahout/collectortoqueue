@@ -1,7 +1,7 @@
 {
   "name": "collectortoqueue",
-  "version": "1.0.22",
-  "description": "get data from Source to another emplacement",
+  "version": "1.0.23",
+  "description": "Tools for node Kue. Take data from ONE Location do some comute and Save data in another location",
   "main": "app.js",
   "directories": {
     "example": "example",
