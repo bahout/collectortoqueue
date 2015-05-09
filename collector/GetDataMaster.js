@@ -39,8 +39,6 @@ var GetDataMaster = (function () {
             return new Promise(function (resolve, reject) {
                 _this._getData(nbmessage)
                     .then(function () {
-                    return _this._getData(nbmessage);
-                }).then(function () {
                     return resolve();
                 });
                 _this.setLimit();

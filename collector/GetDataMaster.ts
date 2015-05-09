@@ -54,9 +54,10 @@ export class GetDataMaster {
         return ()=> {
             return new Promise((resolve, reject)=> {
                 this._getData(nbmessage)
-                    .then(()=> {
+                    /*.then(()=> {
                         return this._getData(nbmessage)
-                    }).then(()=> {
+                    })*/
+                    .then(()=> {
                         return resolve()
                     });
 

@@ -41,6 +41,7 @@ export class GetArrayData extends GetDataMaster {
 
     _getData(nbmessage = 1) {
         return new Promise((resolve, reject)=> {
+            //console.log('this.arr ==>', this.arr);
             this.data = this.arr.shift();
             resolve();
         })

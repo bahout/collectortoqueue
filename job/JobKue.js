@@ -52,9 +52,11 @@ var JobKue = (function (_super) {
      * Send Task
      * @param data
      */
-    JobKue.prototype.task = function (data) {
+    JobKue.prototype.task = function (data, type) {
         var _this = this;
+        if (type === void 0) { type = this.type; }
         return new Promise(function (resolve, reject) {
+            console.log('Send Task  ==>', data);
             data = _this.dataTransform(data)
                 .then(function (data) {
                 return _this.queue.create(_this.type, data)
@@ -180,6 +182,10 @@ var JobKue = (function (_super) {
                         var lastUpdate = +Date.now() - job.updated_at;
                         if (lastUpdate > maxTimeToExecute) {
                             console.log('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
+                            console.log(job);
+                            var data = job.data.data;
+                            delete job.data.data;
+                            job.data = data;
                             _this.task(job).then(function () {
                                 console.log('job.id', job.id);
                                 return 'done';

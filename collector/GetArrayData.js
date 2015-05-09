@@ -28,6 +28,7 @@ var GetArrayData = (function (_super) {
         var _this = this;
         if (nbmessage === void 0) { nbmessage = 1; }
         return new Promise(function (resolve, reject) {
+            //console.log('this.arr ==>', this.arr);
             _this.data = _this.arr.shift();
             resolve();
         });

@@ -60,9 +60,9 @@ export class JobKue extends JobMaster {
      * Send Task
      * @param data
      */
-    task(data) {
+    task(data, type = this.type) {
         return new Promise((resolve, reject)=> {
-
+            console.log('Send Task  ==>', data);
             data = this.dataTransform(data)
                 .then((data)=> {
 
@@ -207,6 +207,10 @@ export class JobKue extends JobMaster {
                         var lastUpdate = +Date.now() - job.updated_at;
                         if (lastUpdate > maxTimeToExecute) {
                             console.log('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
+                            console.log(job);
+                            var data = job.data.data;
+                            delete job.data.data;
+                            job.data = data;
                             this.task(job).then(()=> {
                                 console.log('job.id', job.id);
                                 return 'done'
