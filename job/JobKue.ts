@@ -22,7 +22,7 @@ export class JobKue extends JobMaster {
     static GetDataMaster;
     collector;
     queue;
-    type = 'url';
+    type;
     dying;
     removeOnComplete = true;
     //messages
@@ -32,13 +32,12 @@ export class JobKue extends JobMaster {
      * @param GetDataMaster
      * @param {concurrency} Nb job done in parallele
      */
-    constructor(redisconf, collector?) {
+    constructor(redisconf, collector?, type?) {
         super(collector);
         this.queue = kue.createQueue({redis: redisconf, disableSearch: true});
         this.queue.watchStuckJobs();
         this.name = 'JobKue';
-
-        //this.resolveStuckjob();
+        if (this.type) this.resolveStuckjob();
         this.end();
     }
 
@@ -60,7 +59,8 @@ export class JobKue extends JobMaster {
      * Send Task
      * @param data
      */
-    task(data, type = this.type) {
+    task(data) {
+
         return new Promise((resolve, reject)=> {
             console.log('Send Task  ==>', data);
             data = this.dataTransform(data)
@@ -207,11 +207,8 @@ export class JobKue extends JobMaster {
                         var lastUpdate = +Date.now() - job.updated_at;
                         if (lastUpdate > maxTimeToExecute) {
                             console.log('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
-                            console.log(job);
-                            var data = job.data.data;
-                            delete job.data.data;
-                            job.data = data;
-                            this.task(job).then(()=> {
+                            console.log('================> ', job.data, this.type);
+                            this.task(job.data).then(()=> {
                                 console.log('job.id', job.id);
                                 return 'done'
                             });  // either reschedule (re-attempt?) or remove the job.

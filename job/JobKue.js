@@ -26,15 +26,15 @@ var JobKue = (function (_super) {
      * @param GetDataMaster
      * @param {concurrency} Nb job done in parallele
      */
-    function JobKue(redisconf, collector) {
+    function JobKue(redisconf, collector, type) {
         _super.call(this, collector);
         this.concurrency = 2;
-        this.type = 'url';
         this.removeOnComplete = true;
         this.queue = kue.createQueue({ redis: redisconf, disableSearch: true });
         this.queue.watchStuckJobs();
         this.name = 'JobKue';
-        //this.resolveStuckjob();
+        if (this.type)
+            this.resolveStuckjob();
         this.end();
     }
     JobKue.prototype.removeAll = function (type, status) {
@@ -52,9 +52,8 @@ var JobKue = (function (_super) {
      * Send Task
      * @param data
      */
-    JobKue.prototype.task = function (data, type) {
+    JobKue.prototype.task = function (data) {
         var _this = this;
-        if (type === void 0) { type = this.type; }
         return new Promise(function (resolve, reject) {
             console.log('Send Task  ==>', data);
             data = _this.dataTransform(data)
@@ -182,11 +181,8 @@ var JobKue = (function (_super) {
                         var lastUpdate = +Date.now() - job.updated_at;
                         if (lastUpdate > maxTimeToExecute) {
                             console.log('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
-                            console.log(job);
-                            var data = job.data.data;
-                            delete job.data.data;
-                            job.data = data;
-                            _this.task(job).then(function () {
+                            console.log('================> ', job.data, _this.type);
+                            _this.task(job.data).then(function () {
                                 console.log('job.id', job.id);
                                 return 'done';
                             }); // either reschedule (re-attempt?) or remove the job.
