@@ -37,7 +37,6 @@ export class JobKue extends JobMaster {
         this.queue = kue.createQueue({redis: redisconf, disableSearch: true});
         this.queue.watchStuckJobs();
         this.name = 'JobKue';
-        if (this.type) this.resolveStuckjob();
         this.end();
     }
 
@@ -187,6 +186,7 @@ export class JobKue extends JobMaster {
     }
 
 
+/*
     resolveStuckjob(interval = 5000, maxTimeToExecute = 120000) {
         setInterval(() => {
 
@@ -227,6 +227,7 @@ export class JobKue extends JobMaster {
             });
         }, interval);
     }
+*/
 
 
 }
