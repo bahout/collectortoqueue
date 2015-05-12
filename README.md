@@ -1,4 +1,7 @@
 # collectortoqueue
+This library is in alpha. We will make an effort to support the library, but we reserve the right to make incompatible changes when necessary.
+
+
 
 It is a task Manager based on Kue. (node.js)
 
@@ -21,13 +24,12 @@ In file producer.js
     collector.start = 0;
     collector.size = 5000;
     
-    
-     //Configure Kue
+     //prepare data to be send in kue
      var jobMaster = new ctq.JobKue(config.redis, collector);
      //nb of job send in the same time
      jobMaster.type = 'url';
      
-     
+     //run : the database in send in the redis kue by groupe of 5000.
      jobMaster
              .init()
              .then(jobMaster.exec())
@@ -37,7 +39,6 @@ In file producer.js
              .catch(function (e) {
                  console.log(e)
              });
-     
      
 ```
 
