@@ -13,11 +13,32 @@ It is composed with 3 parts:
 
 
 ## Example
+In file producer.js
  ```
-   //define the source of data
-    var collector = new ctq.GetSqlData('prestaleads', 'users', config.mysql);
+    //define the source of data
+    var collector = new ctq.GetSqlData('database', 'table', config.mysql);
     collector.filter = "WHERE site_internet<>''";
     collector.start = 0;
+    collector.size = 5000;
+    
+    
+     //Configure Kue
+     var jobMaster = new ctq.JobKue(config.redis, collector);
+     //nb of job send in the same time
+     jobMaster.type = 'url';
+     
+     
+     jobMaster
+             .init()
+             .then(jobMaster.exec())
+             .then(function () {
+                 console.log('====================== all task has been executed ======================');
+             })
+             .catch(function (e) {
+                 console.log(e)
+             });
+     
+     
 ```
 
 
