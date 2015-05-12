@@ -17,7 +17,7 @@ var collector = new GetTxtData('../data/toto.txt');
 //var collector = new GetSqlData('prestaleads', 'users');
 
 //nb of data collected
-collector.concurrency = 1;
+collector.size = 1;
 
 
 var job = new JobMaster(collector);

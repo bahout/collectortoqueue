@@ -19,7 +19,7 @@ import JsonDB = require('node-json-db');
 export class GetDataMaster {
     name;
     data = [];
-    concurrency = 1;
+    size = 1;
     Job;
     filter = '';
     txtdb;
@@ -67,7 +67,7 @@ export class GetDataMaster {
     }
 
     setLimit() {
-        this.start = this.concurrency + this.start;
+        this.start = this.size + this.start;
         //save txtdb in order to restart from this point
         this.txtdb.push('/' + this.name + '/' + this.database + '/' + this.table, this.start)
     }

@@ -11,7 +11,7 @@ var JsonDB = require('node-json-db');
 var GetDataMaster = (function () {
     function GetDataMaster() {
         this.data = [];
-        this.concurrency = 1;
+        this.size = 1;
         this.filter = '';
         this.name = 'GetDataMaster';
         this.Job = JobMaster_1.JobMaster;
@@ -46,7 +46,7 @@ var GetDataMaster = (function () {
         };
     };
     GetDataMaster.prototype.setLimit = function () {
-        this.start = this.concurrency + this.start;
+        this.start = this.size + this.start;
         //save txtdb in order to restart from this point
         this.txtdb.push('/' + this.name + '/' + this.database + '/' + this.table, this.start);
     };

@@ -46,11 +46,11 @@ var GetMongoData = (function (_super) {
                 _this.filter = {};
             if (!_this.options)
                 _this.options = {};
-            //this.options = _.extend(this.options, {limit: this.concurrency, skip: this.start});
+            //this.options = _.extend(this.options, {limit: this.size, skip: this.start});
             //console.log(this.options);
             _this.collection
                 .find(_this.filter, _this.options)
-                .limit(_this.concurrency)
+                .limit(_this.size)
                 .skip(_this.start)
                 .toArray(function (err, docs) {
                 //console.log(docs);

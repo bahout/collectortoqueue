@@ -11,7 +11,6 @@ import {GetDataMaster} from './GetDataMaster';
 import fs = require("fs");
 
 
-
 export class GetTxtData extends GetDataMaster {
     name;
     filename;
@@ -41,14 +40,12 @@ export class GetTxtData extends GetDataMaster {
 
 
     _getData(nbmessage = 1) {
-        return ()=> {
-            return new Promise((resolve, reject)=> {
-                this.data = GetTxtData.allData.splice(0, this.concurrency);
-                console.log('GetTxtData.data ==>', this.data);
-                resolve();
+        return new Promise((resolve, reject)=> {
+            this.data = GetTxtData.allData.splice(0, this.size);
+            console.log('GetTxtData.data ==>', this.data);
+            resolve();
 
-            })
-        }
+        })
     }
 
 

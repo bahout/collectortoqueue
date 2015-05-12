@@ -37,13 +37,11 @@ var GetTxtData = (function (_super) {
     GetTxtData.prototype._getData = function (nbmessage) {
         var _this = this;
         if (nbmessage === void 0) { nbmessage = 1; }
-        return function () {
-            return new Promise(function (resolve, reject) {
-                _this.data = GetTxtData.allData.splice(0, _this.concurrency);
-                console.log('GetTxtData.data ==>', _this.data);
-                resolve();
-            });
-        };
+        return new Promise(function (resolve, reject) {
+            _this.data = GetTxtData.allData.splice(0, _this.size);
+            console.log('GetTxtData.data ==>', _this.data);
+            resolve();
+        });
     };
     GetTxtData.prototype.readFileSync = function () {
         var _this = this;

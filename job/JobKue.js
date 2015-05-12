@@ -8,6 +8,7 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 var Promise = require('bluebird');
+var async = require('async');
 var JobMaster_1 = require('./JobMaster');
 var kue = require('kue');
 /**
@@ -29,6 +30,7 @@ var JobKue = (function (_super) {
         _super.call(this, collector);
         this.concurrency = 2;
         this.removeOnComplete = true;
+        console.log('redisconf from constructor', redisconf);
         this.queue = kue.createQueue({ redis: redisconf, disableSearch: true });
         this.queue.watchStuckJobs();
         this.name = 'JobKue';
@@ -100,36 +102,6 @@ var JobKue = (function (_super) {
             //resolve()
         });
     };
-    /*
-     execTask(type) {
-     //console.log('start process');
-     return new Promise((resolve, reject)=> {
-     //console.log('start process 2', this.queue);
-     this.queue.process(type, this.concurrency, (job, done) => {
-     //console.log('start process 3', job.data);
-
-     this.unitTask(job.data)
-     .then(()=> {
-     done();
-     return resolve()
-     }).catch((e)=> {
-     console.log('error in task', e);
-     done(new Error('error in task' + e));
-     return resolve()
-     })
-     });
-     resolve()
-     })
-
-     }
-     */
-    /*
-     unitTask(job) {
-     return new Promise((resolve, reject)=> {
-     resolve();
-     })
-     }
-     */
     JobKue.prototype.end = function () {
         var _this = this;
         console.log('spy event uncaughtException and SIGTERM');
@@ -157,6 +129,42 @@ var JobKue = (function (_super) {
                 process.exit(1);
             });
         }
+    };
+    JobKue.prototype.resolveStuckjob = function (interval, maxTimeToExecute) {
+        var _this = this;
+        if (interval === void 0) { interval = 5000; }
+        if (maxTimeToExecute === void 0) { maxTimeToExecute = 6000000; }
+        setInterval(function () {
+            // first check the active job list (hopefully this is relatively small and cheap)
+            // if this takes longer than a single "interval" then we should consider using
+            // setTimeouts
+            _this.queue.active(function (err, ids) {
+                // for each id we're going to see how long ago the job was last "updated"
+                async.map(ids, function (id, cb) {
+                    // we get the job info from redis
+                    kue.Job.get(id, function (err, job) {
+                        if (err) {
+                            throw err;
+                        } // let's think about what makes sense here
+                        // we compare the updated_at to current time.
+                        var lastUpdate = +Date.now() - job.updated_at;
+                        if (lastUpdate > maxTimeToExecute) {
+                            console.log('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
+                            console.log('================> ', job.data, _this.type);
+                            _this.task(job.data).then(function () {
+                                console.log('job.id', job.id);
+                                return 'done';
+                            }); // either reschedule (re-attempt?) or remove the job.
+                            job.remove(function (err) {
+                            });
+                        }
+                        else {
+                            cb(null);
+                        }
+                    });
+                });
+            });
+        }, interval);
     };
     return JobKue;
 })(JobMaster_1.JobMaster);

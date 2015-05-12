@@ -7,6 +7,7 @@ var __extends = this.__extends || function (d, b) {
     __.prototype = b.prototype;
     d.prototype = new __();
 };
+var _ = require('lodash');
 var GetDataMaster_1 = require('./GetDataMaster');
 var Promise = require('bluebird');
 var mongodb = Promise.promisifyAll(require('mongodb'));
@@ -25,11 +26,16 @@ var GetArrayData = (function (_super) {
         });
     };
     GetArrayData.prototype._getData = function (nbmessage) {
+        //console.log(this.size, nbmessage);
         var _this = this;
-        if (nbmessage === void 0) { nbmessage = 1; }
+        if (this.size)
+            nbmessage = this.size;
         return new Promise(function (resolve, reject) {
             //console.log('this.arr ==>', this.arr);
-            _this.data = _this.arr.shift();
+            //this.data = this.arr.shift();
+            //this.data = this.arr.shift();
+            _this.data = _.take(_this.arr, _this.size);
+            _this.arr = _.takeRight(_this.arr, _this.arr.length - _this.size);
             resolve();
         });
     };

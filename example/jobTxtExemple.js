@@ -8,7 +8,7 @@ var JobMaster_1 = require('../job/JobMaster');
 var collector = new GetTxtData_1.GetTxtData('../data/toto.txt');
 //var collector = new GetSqlData('prestaleads', 'users');
 //nb of data collected
-collector.concurrency = 1;
+collector.size = 1;
 var job = new JobMaster_1.JobMaster(collector);
 job.task = function (job) {
     return new Promise(function (resolve, reject) {

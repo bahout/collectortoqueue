@@ -16,10 +16,10 @@ import config= require('./../../config.json');
 //define the source
 
 //var collector = new GetTxtData('../data/toto.txt');
-var collector = new GetMongoData('cl-task', 'url', config.mongoAzure);
+var collector = new GetMongoData('cl-task', 'siren2', config.mongoAzure);
 
 //nb of data collected
-collector.concurrency = 20;
+collector.size = 20;
 
 
 collector

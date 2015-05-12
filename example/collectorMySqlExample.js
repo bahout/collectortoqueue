@@ -10,7 +10,7 @@ console.log('config', config);
 //var collector = new GetTxtData('../data/toto.txt');
 var collector = new GetSqlData_1.GetSqlData('prestaleads', 'users', config);
 //nb of data collected
-collector.concurrency = 3;
+collector.size = 3;
 collector
     .init()
     .then(collector.getData())
@@ -23,6 +23,11 @@ collector
     //we could do something with the data.
     return console.log(_(collector.data).pluck('id').value());
 })
+    .then(collector.getData())
+    .then(function () {
+        //we could do something with the data.
+        return console.log(_(collector.data).pluck('id').value());
+    })
     .then(function () {
     //we could do something with the data.
     return console.log(_(collector.data).pluck('id').value());

@@ -18,6 +18,7 @@ export class GetArrayData extends GetDataMaster {
     txtdb;
     url;
     arr;
+    size;
     collection;
     rows:Array<any>;
     nbElements:number;
@@ -39,10 +40,21 @@ export class GetArrayData extends GetDataMaster {
         })
     }
 
-    _getData(nbmessage = 1) {
+    _getData(nbmessage?) {
+
+        //console.log(this.size, nbmessage);
+
+        if (this.size) nbmessage = this.size;
+
         return new Promise((resolve, reject)=> {
             //console.log('this.arr ==>', this.arr);
-            this.data = this.arr.shift();
+            //this.data = this.arr.shift();
+            //this.data = this.arr.shift();
+
+            this.data = _.take(this.arr, this.size);
+            this.arr = _.takeRight(this.arr, this.arr.length - this.size);
+
+
             resolve();
         })
     }

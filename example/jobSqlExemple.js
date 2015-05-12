@@ -10,7 +10,7 @@ console.log('config', config);
 //define the source
 var collector = new GetSqlData_1.GetSqlData('prestaleads', 'users', config);
 //nb of data collected
-collector.concurrency = 3;
+collector.size = 3;
 var job = new JobMaster_1.JobMaster(collector);
 job.task = function (job) {
     return new Promise(function (resolve, reject) {

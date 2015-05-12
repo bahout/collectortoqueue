@@ -61,7 +61,7 @@ var GetSqlData = (function (_super) {
     GetSqlData.prototype.mysqlExpression = function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            _this.mysqlQuery = 'SELECT * FROM ' + _this.table + ' ' + _this.filter + ' LIMIT ' + _this.start + ',' + _this.concurrency;
+            _this.mysqlQuery = 'SELECT * FROM ' + _this.table + ' ' + _this.filter + ' LIMIT ' + _this.start + ',' + _this.size;
             console.log(_this.mysqlQuery);
             _this.getElement(_this.mysqlQuery)
                 .then(function () {

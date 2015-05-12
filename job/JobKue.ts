@@ -34,6 +34,7 @@ export class JobKue extends JobMaster {
      */
     constructor(redisconf, collector?, type?) {
         super(collector);
+        console.log('redisconf from constructor', redisconf);
         this.queue = kue.createQueue({redis: redisconf, disableSearch: true});
         this.queue.watchStuckJobs();
         this.name = 'JobKue';
@@ -121,39 +122,6 @@ export class JobKue extends JobMaster {
     }
 
 
-    /*
-     execTask(type) {
-     //console.log('start process');
-     return new Promise((resolve, reject)=> {
-     //console.log('start process 2', this.queue);
-     this.queue.process(type, this.concurrency, (job, done) => {
-     //console.log('start process 3', job.data);
-
-     this.unitTask(job.data)
-     .then(()=> {
-     done();
-     return resolve()
-     }).catch((e)=> {
-     console.log('error in task', e);
-     done(new Error('error in task' + e));
-     return resolve()
-     })
-     });
-     resolve()
-     })
-
-     }
-     */
-
-    /*
-     unitTask(job) {
-     return new Promise((resolve, reject)=> {
-     resolve();
-     })
-     }
-     */
-
-
     end() {
         console.log('spy event uncaughtException and SIGTERM');
 
@@ -186,8 +154,7 @@ export class JobKue extends JobMaster {
     }
 
 
-/*
-    resolveStuckjob(interval = 5000, maxTimeToExecute = 120000) {
+    resolveStuckjob(interval = 5000, maxTimeToExecute = 6000000) {
         setInterval(() => {
 
             // first check the active job list (hopefully this is relatively small and cheap)
@@ -227,7 +194,6 @@ export class JobKue extends JobMaster {
             });
         }, interval);
     }
-*/
 
 
 }

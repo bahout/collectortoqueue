@@ -6,7 +6,7 @@ var GetTxtData_1 = require('../collector/GetTxtData');
 var collector = new GetTxtData_1.GetTxtData('../data/toto.txt');
 //var collector = new GetSqlData('prestaleads', 'users');
 //nb of data collected
-collector.concurrency = 4;
+collector.size = 4;
 collector
     .init()
     .then(collector.getData())

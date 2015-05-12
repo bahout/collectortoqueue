@@ -6,9 +6,9 @@ var GetMongoData_1 = require('../collector/GetMongoData');
 var config = require('./../../config.json');
 //define the source
 //var collector = new GetTxtData('../data/toto.txt');
-var collector = new GetMongoData_1.GetMongoData('cl-task', 'url', config.mongoAzure);
+var collector = new GetMongoData_1.GetMongoData('cl-task', 'siren2', config.mongoAzure);
 //nb of data collected
-collector.concurrency = 20;
+collector.size = 20;
 collector
     .init()
     .then(collector.getData())

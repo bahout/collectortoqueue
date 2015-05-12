@@ -58,11 +58,11 @@ export class GetMongoData extends GetDataMaster {
             if (!this.filter) this.filter = {};
             if (!this.options) this.options = {};
 
-            //this.options = _.extend(this.options, {limit: this.concurrency, skip: this.start});
+            //this.options = _.extend(this.options, {limit: this.size, skip: this.start});
             //console.log(this.options);
             this.collection
                 .find(this.filter, this.options)
-                .limit(this.concurrency)
+                .limit(this.size)
                 .skip(this.start)
                 .toArray((err, docs)=> {
                     //console.log(docs);

@@ -19,7 +19,7 @@ console.log('config', config);
 var collector = new GetSqlData('prestaleads', 'users', config);
 
 //nb of data collected
-collector.concurrency = 3;
+collector.size = 3;
 
 
 var job = new JobMaster(collector);

@@ -71,7 +71,7 @@ export class GetSqlData extends GetDataMaster {
 
     mysqlExpression() {
         return new Promise((resolve, reject)=> {
-            this.mysqlQuery = 'SELECT * FROM ' + this.table + ' ' + this.filter + ' LIMIT ' + this.start + ',' + this.concurrency;
+            this.mysqlQuery = 'SELECT * FROM ' + this.table + ' ' + this.filter + ' LIMIT ' + this.start + ',' + this.size;
             console.log(this.mysqlQuery);
             this.getElement(this.mysqlQuery)
                 .then(()=> {
