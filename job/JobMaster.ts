@@ -32,8 +32,11 @@ export class JobMaster {
         //this.collector = collector;
     }
 
-
-    init(type? = this.type) {
+    /**
+     * Init is used most of the time to have time to connect to database.
+     * @param type
+     */
+    init(type = this.type) {
         this.type = type;
         return new Promise((resolve, reject)=> {
             this.collector.init()
@@ -45,7 +48,10 @@ export class JobMaster {
 
     }
 
-
+    /**
+     * It is the job we want to do with the data
+     * @param job
+     */
     unitTask(job) {
         return new Promise((resolve, reject)=> {
             resolve();

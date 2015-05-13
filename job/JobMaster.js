@@ -24,6 +24,10 @@ var JobMaster = (function () {
         this.type = 'default';
         //this.collector = collector;
     }
+    /**
+     * Init is used most of the time to have time to connect to database.
+     * @param type
+     */
     JobMaster.prototype.init = function (type) {
         var _this = this;
         if (type === void 0) { type = this.type; }
@@ -36,6 +40,10 @@ var JobMaster = (function () {
             });
         });
     };
+    /**
+     * It is the job we want to do with the data
+     * @param job
+     */
     JobMaster.prototype.unitTask = function (job) {
         return new Promise(function (resolve, reject) {
             resolve();

@@ -22,9 +22,9 @@ var JobKue = (function (_super) {
     //messages
     /**
      *
-     * @param getDataMaster
-     * @param GetDataMaster
-     * @param {concurrency} Nb job done in parallele
+     * @param redisconf : redis connection
+     * @param collector : collector used
+     * @param type : name of queue used
      */
     function JobKue(redisconf, collector, type) {
         _super.call(this, collector);
@@ -36,6 +36,11 @@ var JobKue = (function (_super) {
         this.name = 'JobKue';
         this.end();
     }
+    /**
+     * Used to remove task from kue for a type
+     * @param type
+     * @param status
+     */
     JobKue.prototype.removeAll = function (type, status) {
         if (status === void 0) { status = 'inactive'; }
         console.log('start remove jobs ', type, ' ', status);
@@ -48,7 +53,7 @@ var JobKue = (function (_super) {
         });
     };
     /**
-     * Send Task
+     * Add task to kue. Type has to be defined in constructor
      * @param data
      */
     JobKue.prototype.task = function (data) {
@@ -69,7 +74,7 @@ var JobKue = (function (_super) {
         });
     };
     /**
-     * Get Task and Executte
+     * Task are consume here
      * @param type
      */
     JobKue.prototype.execTask = function (type) {
