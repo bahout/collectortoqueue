@@ -37,6 +37,28 @@ var GetMongoData = (function (_super) {
             });
         });
     };
+    GetMongoData.prototype.countElement = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if (!_this.filter)
+                _this.filter = {};
+            if (!_this.options)
+                _this.options = {};
+            var cursor = _this.collection
+                .find(_this.filter, _this.options);
+            cursor.count(function (err, count) {
+                //console.log(count);
+                if (count) {
+                    _this.nbElements = count;
+                    //console.log('this.nbElements ==>', count)
+                    resolve();
+                }
+                else {
+                    reject(err);
+                }
+            });
+        });
+    };
     GetMongoData.prototype._getData = function (nbmessage) {
         var _this = this;
         if (nbmessage === void 0) { nbmessage = 1; }

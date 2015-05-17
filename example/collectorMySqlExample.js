@@ -23,11 +23,6 @@ collector
     //we could do something with the data.
     return console.log(_(collector.data).pluck('id').value());
 })
-    .then(collector.getData())
-    .then(function () {
-        //we could do something with the data.
-        return console.log(_(collector.data).pluck('id').value());
-    })
     .then(function () {
     //we could do something with the data.
     return console.log(_(collector.data).pluck('id').value());

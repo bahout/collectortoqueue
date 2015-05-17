@@ -10,7 +10,7 @@ export class Ui2 {
     port;
 
     constructor(redisconf, port = 3001) {
-        console.log(redisconf);
+        //console.log(redisconf);
         kue.createQueue({redis: redisconf});
 
         ui.setup({
@@ -25,7 +25,7 @@ export class Ui2 {
         app.use('/kue', ui.app);
 
         app.listen(port);
-        console.log('server is running in port ' + port + '/kue')
+        console.log('\n===> server is running\nOpen your navigation in: http://yourHost:' + port + '/kue'+'\n')
 
     }
 }

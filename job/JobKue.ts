@@ -28,9 +28,9 @@ export class JobKue extends JobMaster {
     //messages
     /**
      *
-     * @param getDataMaster
-     * @param GetDataMaster
-     * @param {concurrency} Nb job done in parallele
+     * @param redisconf : redis connection
+     * @param collector : collector used
+     * @param type : name of queue used
      */
     constructor(redisconf, collector?, type?) {
         super(collector);
@@ -42,6 +42,11 @@ export class JobKue extends JobMaster {
     }
 
 
+    /**
+     * Used to remove task from kue for a type
+     * @param type
+     * @param status
+     */
     removeAll(type, status = 'inactive') {
         console.log('start remove jobs ', type, ' ', status);
         kue.Job.rangeByType(type, status, 0, 1000000, 'asc', function (err, selectedJobs) {
@@ -56,7 +61,7 @@ export class JobKue extends JobMaster {
 
 
     /**
-     * Send Task
+     * Add task to kue. Type has to be defined in constructor
      * @param data
      */
     task(data) {

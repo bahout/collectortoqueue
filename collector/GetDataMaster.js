@@ -50,6 +50,12 @@ var GetDataMaster = (function () {
         //save txtdb in order to restart from this point
         this.txtdb.push('/' + this.name + '/' + this.database + '/' + this.table, this.start);
     };
+    GetDataMaster.prototype.countElement = function () {
+        return new Promise(function (resolve, reject) {
+            console.log('countElement has to be defined');
+            reject('countElement has to be defined for childreen methods');
+        });
+    };
     /**
      * Delete Message
      * @param id

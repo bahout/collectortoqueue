@@ -52,6 +52,33 @@ export class GetMongoData extends GetDataMaster {
     }
 
 
+    countElement() {
+        return new Promise((resolve, reject)=> {
+            if (!this.filter) this.filter = {};
+            if (!this.options) this.options = {};
+
+            var cursor = this.collection
+                .find(this.filter, this.options);
+
+
+            cursor.count( (err, count)=> {
+                //console.log(count);
+                if (count) {
+                    this.nbElements = count;
+                    //console.log('this.nbElements ==>', count)
+                    resolve();
+                }
+                else {
+                    reject(err);
+                }
+
+            })
+
+        })
+
+    }
+
+
     _getData(nbmessage = 1) {
         return new Promise((resolve, reject)=> {
             //console.log('this.start =', this.start);
