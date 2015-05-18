@@ -24,6 +24,7 @@ var GetMongoData = (function (_super) {
     GetMongoData.prototype.init = function (collectionName) {
         var _this = this;
         if (collectionName === void 0) { collectionName = this.collectionName; }
+        console.log('mongo init collector');
         this.collectionName = collectionName;
         return new Promise(function (resolve, reject) {
             console.log('this.url', _this.url);
@@ -68,6 +69,7 @@ var GetMongoData = (function (_super) {
                 _this.filter = {};
             if (!_this.options)
                 _this.options = {};
+            // console.log('this ==', this);
             //this.options = _.extend(this.options, {limit: this.size, skip: this.start});
             //console.log(this.options);
             _this.collection

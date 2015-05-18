@@ -8,6 +8,7 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 var Promise = require('bluebird');
+var _ = require('lodash');
 var async = require('async');
 var JobMaster_1 = require('./JobMaster');
 var kue = require('kue');
@@ -22,9 +23,9 @@ var JobKue = (function (_super) {
     //messages
     /**
      *
-     * @param redisconf : redis connection
-     * @param collector : collector used
-     * @param type : name of queue used
+     * @param getDataMaster
+     * @param GetDataMaster
+     * @param {concurrency} Nb job done in parallele
      */
     function JobKue(redisconf, collector, type) {
         _super.call(this, collector);
@@ -36,12 +37,7 @@ var JobKue = (function (_super) {
         this.name = 'JobKue';
         this.end();
     }
-    /**
-     * Used to remove task from kue for a type
-     * @param type
-     * @param status
-     */
-    JobKue.prototype.removeAll = function (type, status) {
+    JobKue.prototype.remove = function (type, status) {
         if (status === void 0) { status = 'inactive'; }
         console.log('start remove jobs ', type, ' ', status);
         kue.Job.rangeByType(type, status, 0, 1000000, 'asc', function (err, selectedJobs) {
@@ -53,7 +49,7 @@ var JobKue = (function (_super) {
         });
     };
     /**
-     * Add task to kue. Type has to be defined in constructor
+     * Send Task
      * @param data
      */
     JobKue.prototype.task = function (data) {
@@ -74,10 +70,10 @@ var JobKue = (function (_super) {
         });
     };
     /**
-     * Get Task and Executte
+     * Get Task and Execute
      * @param type
      */
-    JobKue.prototype.execTask = function (type) {
+    JobKue.prototype.consume = function (type) {
         var _this = this;
         console.log('startprocess execTask', type, this.concurrency);
         var count = 0;
@@ -85,27 +81,56 @@ var JobKue = (function (_super) {
             console.log('concurrency ==', _this.concurrency);
             _this.queue.process(type, _this.concurrency, function (job, done) {
                 console.log('start process =', job.data);
-                _this.unitTask(job.data)
+                _this.collector.start = job.data.min;
+                _this.collector.size = job.data.size;
+                _this.collector.filter = job.data.condition;
+                _this.collector
+                    .init()
+                    .then(_this.collector.getData())
                     .then(function () {
-                    count++;
-                    done();
-                    if (count == _this.concurrency)
+                    console.log(_this.collector.data.length);
+                    console.log('all data has been retrived from database (this.data)');
+                    //done is to send when all data has be process
+                    //creat a queue
+                    var q = async.queue(_this.task, _this.concurrency);
+                    //add data to queue
+                    _(_this.collector.data).forEach(function (ele) {
+                        q.push(ele, function (err) {
+                            console.log('finished processing');
+                        });
+                    }).value();
+                    // assign a callback
+                    q.drain = function () {
+                        console.log('all items have been processed');
+                        //exit of queue Kue
+                        done();
+                        //exit of promises
                         resolve();
-                    // done();
-                    //return resolve()
-                }).catch(function (e) {
-                    count++;
-                    console.log('error in task', e);
-                    done(new Error('error in task'));
-                    if (count == _this.concurrency)
-                        resolve();
-                    //done(new Error('error in task' + e));
-                    // done(new Error('error in task'));
-                    //return resolve()
+                    };
                 });
+                /* this.unitTask(job.data)
+                 .then(()=> {
+                 count++;
+                 done();
+                 if (count == this.concurrency) resolve();
+
+                 // done();
+                 //return resolve()
+                 }).catch((e)=> {
+                 count++;
+                 console.log('error in task', e);
+                 done(new Error('error in task'));
+                 if (count == this.concurrency) resolve();
+
+                 //done(new Error('error in task' + e));
+                 // done(new Error('error in task'));
+                 //return resolve()
+                 })*/
             });
             //resolve()
         });
+    };
+    JobKue.prototype.commute = function (data, cb) {
     };
     JobKue.prototype.end = function () {
         var _this = this;

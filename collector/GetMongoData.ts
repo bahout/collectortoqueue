@@ -35,6 +35,7 @@ export class GetMongoData extends GetDataMaster {
 
 
     init(collectionName = this.collectionName) {
+        console.log('mongo init collector');
         this.collectionName = collectionName;
         return new Promise((resolve, reject)=> {
             console.log('this.url', this.url);
@@ -61,7 +62,7 @@ export class GetMongoData extends GetDataMaster {
                 .find(this.filter, this.options);
 
 
-            cursor.count( (err, count)=> {
+            cursor.count((err, count)=> {
                 //console.log(count);
                 if (count) {
                     this.nbElements = count;
@@ -84,6 +85,8 @@ export class GetMongoData extends GetDataMaster {
             //console.log('this.start =', this.start);
             if (!this.filter) this.filter = {};
             if (!this.options) this.options = {};
+
+           // console.log('this ==', this);
 
             //this.options = _.extend(this.options, {limit: this.size, skip: this.start});
             //console.log(this.options);

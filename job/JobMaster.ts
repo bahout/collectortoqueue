@@ -14,7 +14,7 @@ import async = require('async');
  * 2) kue.deleteMessage(oneMessage) in Order
  */
 export class JobMaster {
-    concurrency = 2;
+    concurrency = 20;
     //getDataMaster;
     name;
     type;
@@ -32,6 +32,26 @@ export class JobMaster {
         //this.collector = collector;
     }
 
+    produce() {
+        return new Promise((resolve, reject)=> {
+            this
+                .init()
+                .then(()=> {
+                    return this.collector.countElement()
+                })
+                .then(()=> {
+                    //console.log(this.collector);
+                    return console.log('this.collector.nbElements ', this.collector.nbElements)
+                })
+                .then(this.exec())
+                .then(()=> {
+                    resolve()
+                })
+                .catch(function (e) {
+                    reject(e)
+                })
+        })
+    }
 
     init(type? = this.type) {
         this.type = type;
@@ -53,60 +73,44 @@ export class JobMaster {
     }
 
     exec() {
-        this.collector.concurrency = this.concurrency;
-
         return ()=> {
             return new Promise((resolve, reject)=> {
-                var executeAlljobs = ()=> {
-                    //console.log('this.name, this.collector.name', this.name, this.collector.name, this.collector.data);
+                //console.log('this.name, this.collector.name', this.name, this.collector.name, this.collector.data);
+                var date = new Date();
 
-                    this._exec(this.collector.data)
-                        .then(this.collector.getData())
-                        .then(()=> {
+                var q = async.queue((task, callback)=> {
+                    this.addTask(task, callback)
+                }, this.concurrency);
 
-                            console.log('JobMaster.GetDataMaster.data.length', this.collector.data.length);
-                            if (this.collector.data == 0) {
-                                console.log('we try to resolve');
-                                return resolve()
-                            }
-                            executeAlljobs()
-                        })
-                };
-                console.log('this.name, this.collector.name)', this.name, this.collector.name, this.collector.data);
-                return executeAlljobs();
+
+                for (var i = this.collector.start; i < this.collector.nbElements; i = i + this.collector.size) {
+
+                    var data = {min: i, size: this.collector.size, condition: this.collector.filter}
+                    //add tasks
+                    //console.log('JobMaster.kue', JobMaster.kue.messages);
+                    q.push(data, (err)=> {
+                        console.log('finished processing item');
+                    });
+                }
+
+
+                // assign a callback
+                q.drain = ()=> {
+                    console.log('all task have been add in ', new Date() - date);
+                    resolve('done')
+                }
+
             })
-
         }
     }
 
-    _exec(data) {
-        var date = new Date();
-        console.log('add X task in the same time ==>', this.concurrency);
-        return new Promise((resolve, reject)=> {
-            //queue for task
-            var q = async.queue((task, callback)=> {
-                this.execUnit(task, callback)
-            }, this.concurrency);
 
+    consume(type) {
 
-            //add tasks
-            //console.log('JobMaster.kue', JobMaster.kue.messages);
-            q.push(data, (err)=> {
-                //console.log('finished processing item');
-            });
-
-
-            // assign a callback
-            q.drain = ()=> {
-                console.log('all task have been add in ', new Date() - date);
-                resolve('done')
-            }
-
-        })
     }
 
-    execUnit(job, cb) {
 
+    addTask(job, cb) {
         this.task(job)
             .then(this.collector.deleteOneData(job))
             .then(() => {
@@ -132,5 +136,6 @@ export class JobMaster {
 
         this.task(job);
     }
+
 
 }

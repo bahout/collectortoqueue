@@ -19,11 +19,32 @@ var JobMaster = (function () {
      */
     function JobMaster(collector) {
         this.collector = collector;
-        this.concurrency = 2;
+        this.concurrency = 20;
         this.name = 'JobMaster';
         this.type = 'default';
         //this.collector = collector;
     }
+    JobMaster.prototype.produce = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this
+                .init()
+                .then(function () {
+                return _this.collector.countElement();
+            })
+                .then(function () {
+                //console.log(this.collector);
+                return console.log('this.collector.nbElements ', _this.collector.nbElements);
+            })
+                .then(_this.exec())
+                .then(function () {
+                resolve();
+            })
+                .catch(function (e) {
+                reject(e);
+            });
+        });
+    };
     JobMaster.prototype.init = function (type) {
         var _this = this;
         if (type === void 0) { type = this.type; }
@@ -43,49 +64,32 @@ var JobMaster = (function () {
     };
     JobMaster.prototype.exec = function () {
         var _this = this;
-        this.collector.concurrency = this.concurrency;
         return function () {
             return new Promise(function (resolve, reject) {
-                var executeAlljobs = function () {
-                    //console.log('this.name, this.collector.name', this.name, this.collector.name, this.collector.data);
-                    _this._exec(_this.collector.data)
-                        .then(_this.collector.getData())
-                        .then(function () {
-                        console.log('JobMaster.GetDataMaster.data.length', _this.collector.data.length);
-                        if (_this.collector.data == 0) {
-                            console.log('we try to resolve');
-                            return resolve();
-                        }
-                        executeAlljobs();
+                //console.log('this.name, this.collector.name', this.name, this.collector.name, this.collector.data);
+                var date = new Date();
+                var q = async.queue(function (task, callback) {
+                    _this.addTask(task, callback);
+                }, _this.concurrency);
+                for (var i = _this.collector.start; i < _this.collector.nbElements; i = i + _this.collector.size) {
+                    var data = { min: i, size: _this.collector.size, condition: _this.collector.filter };
+                    //add tasks
+                    //console.log('JobMaster.kue', JobMaster.kue.messages);
+                    q.push(data, function (err) {
+                        console.log('finished processing item');
                     });
+                }
+                // assign a callback
+                q.drain = function () {
+                    console.log('all task have been add in ', new Date() - date);
+                    resolve('done');
                 };
-                console.log('this.name, this.collector.name)', _this.name, _this.collector.name, _this.collector.data);
-                return executeAlljobs();
             });
         };
     };
-    JobMaster.prototype._exec = function (data) {
-        var _this = this;
-        var date = new Date();
-        console.log('add X task in the same time ==>', this.concurrency);
-        return new Promise(function (resolve, reject) {
-            //queue for task
-            var q = async.queue(function (task, callback) {
-                _this.execUnit(task, callback);
-            }, _this.concurrency);
-            //add tasks
-            //console.log('JobMaster.kue', JobMaster.kue.messages);
-            q.push(data, function (err) {
-                //console.log('finished processing item');
-            });
-            // assign a callback
-            q.drain = function () {
-                console.log('all task have been add in ', new Date() - date);
-                resolve('done');
-            };
-        });
+    JobMaster.prototype.consume = function (type) {
     };
-    JobMaster.prototype.execUnit = function (job, cb) {
+    JobMaster.prototype.addTask = function (job, cb) {
         this.task(job)
             .then(this.collector.deleteOneData(job))
             .then(function () {

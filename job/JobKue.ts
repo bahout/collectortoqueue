@@ -28,9 +28,9 @@ export class JobKue extends JobMaster {
     //messages
     /**
      *
-     * @param redisconf : redis connection
-     * @param collector : collector used
-     * @param type : name of queue used
+     * @param getDataMaster
+     * @param GetDataMaster
+     * @param {concurrency} Nb job done in parallele
      */
     constructor(redisconf, collector?, type?) {
         super(collector);
@@ -42,12 +42,7 @@ export class JobKue extends JobMaster {
     }
 
 
-    /**
-     * Used to remove task from kue for a type
-     * @param type
-     * @param status
-     */
-    removeAll(type, status = 'inactive') {
+    remove(type, status = 'inactive') {
         console.log('start remove jobs ', type, ' ', status);
         kue.Job.rangeByType(type, status, 0, 1000000, 'asc', function (err, selectedJobs) {
             console.log(err, selectedJobs);
@@ -61,7 +56,7 @@ export class JobKue extends JobMaster {
 
 
     /**
-     * Add task to kue. Type has to be defined in constructor
+     * Send Task
      * @param data
      */
     task(data) {
@@ -91,10 +86,10 @@ export class JobKue extends JobMaster {
 
 
     /**
-     * Get Task and Executte
+     * Get Task and Execute
      * @param type
      */
-    execTask(type) {
+    consume(type) {
         console.log('startprocess execTask', type, this.concurrency);
         var count = 0;
         return new Promise((resolve, reject)=> {
@@ -102,30 +97,73 @@ export class JobKue extends JobMaster {
             this.queue.process(type, this.concurrency, (job, done) => {
                 console.log('start process =', job.data);
 
-                this.unitTask(job.data)
+
+                this.collector.start = job.data.min;
+                this.collector.size = job.data.size;
+                this.collector.filter = job.data.condition;
+
+                this.collector
+                    .init()
+                    .then(this.collector.getData())
                     .then(()=> {
-                        count++;
-                        done();
-                        if (count == this.concurrency) resolve();
 
-                        // done();
-                        //return resolve()
-                    }).catch((e)=> {
-                        count++;
-                        console.log('error in task', e);
-                        done(new Error('error in task'));
-                        if (count == this.concurrency) resolve();
+                        console.log(this.collector.data.length);
 
-                        //done(new Error('error in task' + e));
-                        // done(new Error('error in task'));
-                        //return resolve()
-                    })
+                        console.log('all data has been retrived from database (this.data)');
+                        //done is to send when all data has be process
+
+                        //creat a queue
+                        var q = async.queue(this.task, this.concurrency);
+
+
+                        //add data to queue
+                        _(this.collector.data).forEach((ele)=> {
+                            q.push(ele, (err)=> {
+                                console.log('finished processing');
+                            });
+                        }).value();
+
+                        // assign a callback
+                        q.drain = () => {
+                            console.log('all items have been processed');
+                            //exit of queue Kue
+                            done();
+                            //exit of promises
+                            resolve()
+                        };
+
+
+                    });
+
+
+                /* this.unitTask(job.data)
+                 .then(()=> {
+                 count++;
+                 done();
+                 if (count == this.concurrency) resolve();
+
+                 // done();
+                 //return resolve()
+                 }).catch((e)=> {
+                 count++;
+                 console.log('error in task', e);
+                 done(new Error('error in task'));
+                 if (count == this.concurrency) resolve();
+
+                 //done(new Error('error in task' + e));
+                 // done(new Error('error in task'));
+                 //return resolve()
+                 })*/
             });
             //resolve()
         })
 
     }
 
+
+    commute(data, cb) {
+
+    }
 
     end() {
         console.log('spy event uncaughtException and SIGTERM');
