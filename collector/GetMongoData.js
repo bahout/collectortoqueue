@@ -69,15 +69,18 @@ var GetMongoData = (function (_super) {
                 _this.filter = {};
             if (!_this.options)
                 _this.options = {};
+            if (_this.size)
+                _this.options.limit = _this.size;
             // console.log('this ==', this);
             //this.options = _.extend(this.options, {limit: this.size, skip: this.start});
             //console.log(this.options);
+            console.log('this.size', _this.size);
             _this.collection
                 .find(_this.filter, _this.options)
-                .limit(_this.size)
                 .skip(_this.start)
                 .toArray(function (err, docs) {
                 //console.log(docs);
+                console.log('docs.length', docs.length);
                 _this.data = docs;
                 resolve();
             });

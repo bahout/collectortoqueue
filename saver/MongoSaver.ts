@@ -4,6 +4,8 @@
 import {MasterSaver} from './MasterSaver';
 import MongoDb = require('mongodb');
 import  Promise = require('bluebird');
+import _ = require('lodash');
+
 var mongodb = Promise.promisifyAll(require('mongodb'));
 
 var MongoClient = MongoDb.MongoClient;
@@ -16,7 +18,6 @@ export class MongoSaver extends MasterSaver {
     constructor(public database, public collectionName, config) {
         super();
         this.url = 'mongodb://' + config.host + ':' + config.port + '/' + database;
-        super()
     }
 
     init(collectionName = this.collectionName) {
@@ -45,12 +46,18 @@ export class MongoSaver extends MasterSaver {
 
 
     insertDocuments(data:Array<any>) {
+        console.log('data.lenght', data.length);
+        data = _.flatten(data);
+        data = this.renamekey(data);
         return new Promise((resolve, reject)=> {
             var collection = this.db.collection(this.collectionName);
             // Insert some documents
             collection.insert(data, (err, result)=> {
                 if (result) return resolve(result);
-                if (err) return reject(err)
+                if (err) {
+                    //return reject(err)
+                    resolve();
+                }
             });
         })
     }
@@ -66,5 +73,14 @@ export class MongoSaver extends MasterSaver {
         })
     }
 
+
+    renamekey(data) {
+        return _(data)
+            .forEach()
+            .map((obj)=> {
+                if (obj['id']) obj['_id'] = obj['id'];
+                return obj;
+            }).value()
+    }
 
 }

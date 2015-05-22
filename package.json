@@ -22,11 +22,13 @@
     "bluebird": "^2.9.25",
     "documentdb": "^1.0.0",
     "express": "^4.12.3",
+    "include-all": "^0.1.6",
     "kue": "^0.8.12",
     "kue-ui": "^0.1.0",
     "lodash": "^3.8.0",
     "mongodb": "^2.0.28",
     "mysql": "^2.6.2",
-    "node-json-db": "^0.4.5"
+    "node-json-db": "^0.4.5",
+    "q": "^1.4.1"
   }
 }

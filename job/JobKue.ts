@@ -16,11 +16,12 @@ import kue = require('kue');
  * 2) kue.deleteMessage(oneMessage) in Order
  */
 export class JobKue extends JobMaster {
-    concurrency = 2;
+    concurrency = 1;
     //getDataMaster;
     name;
     static GetDataMaster;
     collector;
+    saver;
     queue;
     type;
     dying;
@@ -32,11 +33,14 @@ export class JobKue extends JobMaster {
      * @param GetDataMaster
      * @param {concurrency} Nb job done in parallele
      */
-    constructor(redisconf, collector?, type?) {
+    constructor(redisconf, collector?, saver?, type?) {
         super(collector);
         console.log('redisconf from constructor', redisconf);
         this.queue = kue.createQueue({redis: redisconf, disableSearch: true});
         this.queue.watchStuckJobs();
+        if (saver) {
+            this.saver = saver;
+        }
         this.name = 'JobKue';
         this.end();
     }
@@ -102,6 +106,9 @@ export class JobKue extends JobMaster {
                 this.collector.size = job.data.size;
                 this.collector.filter = job.data.condition;
 
+                this.saver
+                    .init();
+
                 this.collector
                     .init()
                     .then(this.collector.getData())
@@ -113,13 +120,16 @@ export class JobKue extends JobMaster {
                         //done is to send when all data has be process
 
                         //creat a queue
-                        var q = async.queue(this.task, this.concurrency);
+                        var q = async.queue(this.comute, this.concurrency);
 
-
+                        var count = 0;
                         //add data to queue
                         _(this.collector.data).forEach((ele)=> {
-                            q.push(ele, (err)=> {
-                                console.log('finished processing');
+                            q.push(ele, (err, data)=> {
+                                //console.log('data ==>', data);
+                                count++;
+                                this.saver.data.push(data);
+                                console.log('finished processing ' + count);
                             });
                         }).value();
 
@@ -127,9 +137,15 @@ export class JobKue extends JobMaster {
                         q.drain = () => {
                             console.log('all items have been processed');
                             //exit of queue Kue
-                            done();
-                            //exit of promises
-                            resolve()
+                            this.saver.insertDocuments(this.saver.data).then(()=> {
+                                console.log('all items have been saved');
+
+                                this.saver.data = [];
+                                done();
+                                //exit of promises
+                                resolve()
+                            })
+
                         };
 
 

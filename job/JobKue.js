@@ -27,13 +27,16 @@ var JobKue = (function (_super) {
      * @param GetDataMaster
      * @param {concurrency} Nb job done in parallele
      */
-    function JobKue(redisconf, collector, type) {
+    function JobKue(redisconf, collector, saver, type) {
         _super.call(this, collector);
-        this.concurrency = 2;
+        this.concurrency = 1;
         this.removeOnComplete = true;
         console.log('redisconf from constructor', redisconf);
         this.queue = kue.createQueue({ redis: redisconf, disableSearch: true });
         this.queue.watchStuckJobs();
+        if (saver) {
+            this.saver = saver;
+        }
         this.name = 'JobKue';
         this.end();
     }
@@ -84,6 +87,8 @@ var JobKue = (function (_super) {
                 _this.collector.start = job.data.min;
                 _this.collector.size = job.data.size;
                 _this.collector.filter = job.data.condition;
+                _this.saver
+                    .init();
                 _this.collector
                     .init()
                     .then(_this.collector.getData())
@@ -92,20 +97,28 @@ var JobKue = (function (_super) {
                     console.log('all data has been retrived from database (this.data)');
                     //done is to send when all data has be process
                     //creat a queue
-                    var q = async.queue(_this.task, _this.concurrency);
+                    var q = async.queue(_this.comute, _this.concurrency);
+                    var count = 0;
                     //add data to queue
                     _(_this.collector.data).forEach(function (ele) {
-                        q.push(ele, function (err) {
-                            console.log('finished processing');
+                        q.push(ele, function (err, data) {
+                            //console.log('data ==>', data);
+                            count++;
+                            _this.saver.data.push(data);
+                            console.log('finished processing ' + count);
                         });
                     }).value();
                     // assign a callback
                     q.drain = function () {
                         console.log('all items have been processed');
                         //exit of queue Kue
-                        done();
-                        //exit of promises
-                        resolve();
+                        _this.saver.insertDocuments(_this.saver.data).then(function () {
+                            console.log('all items have been saved');
+                            _this.saver.data = [];
+                            done();
+                            //exit of promises
+                            resolve();
+                        });
                     };
                 });
                 /* this.unitTask(job.data)

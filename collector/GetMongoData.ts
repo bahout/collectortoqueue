@@ -86,16 +86,21 @@ export class GetMongoData extends GetDataMaster {
             if (!this.filter) this.filter = {};
             if (!this.options) this.options = {};
 
-           // console.log('this ==', this);
+            if (this.size) this.options.limit = this.size;
+            // console.log('this ==', this);
 
             //this.options = _.extend(this.options, {limit: this.size, skip: this.start});
             //console.log(this.options);
+            console.log('this.size', this.size);
             this.collection
                 .find(this.filter, this.options)
-                .limit(this.size)
+                //.limit(this.size)
+                //.limit(80)
                 .skip(this.start)
                 .toArray((err, docs)=> {
                     //console.log(docs);
+                    console.log('docs.length', docs.length);
+
                     this.data = docs;
                     resolve();
                 });

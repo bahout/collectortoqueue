@@ -10,6 +10,7 @@ var __extends = this.__extends || function (d, b) {
 var MasterSaver_1 = require('./MasterSaver');
 var MongoDb = require('mongodb');
 var Promise = require('bluebird');
+var _ = require('lodash');
 var mongodb = Promise.promisifyAll(require('mongodb'));
 var MongoClient = MongoDb.MongoClient;
 var MongoSaver = (function (_super) {
@@ -19,7 +20,6 @@ var MongoSaver = (function (_super) {
         this.database = database;
         this.collectionName = collectionName;
         this.url = 'mongodb://' + config.host + ':' + config.port + '/' + database;
-        _super.call(this);
     }
     MongoSaver.prototype.init = function (collectionName) {
         var _this = this;
@@ -46,14 +46,19 @@ var MongoSaver = (function (_super) {
     };
     MongoSaver.prototype.insertDocuments = function (data) {
         var _this = this;
+        console.log('data.lenght', data.length);
+        data = _.flatten(data);
+        data = this.renamekey(data);
         return new Promise(function (resolve, reject) {
             var collection = _this.db.collection(_this.collectionName);
             // Insert some documents
             collection.insert(data, function (err, result) {
                 if (result)
                     return resolve(result);
-                if (err)
-                    return reject(err);
+                if (err) {
+                    //return reject(err)
+                    resolve();
+                }
             });
         });
     };
@@ -69,6 +74,15 @@ var MongoSaver = (function (_super) {
                     return reject(err);
             });
         });
+    };
+    MongoSaver.prototype.renamekey = function (data) {
+        return _(data)
+            .forEach()
+            .map(function (obj) {
+            if (obj['id'])
+                obj['_id'] = obj['id'];
+            return obj;
+        }).value();
     };
     return MongoSaver;
 })(MasterSaver_1.MasterSaver);
