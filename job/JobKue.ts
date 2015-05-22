@@ -99,7 +99,7 @@ export class JobKue extends JobMaster {
         return new Promise((resolve, reject)=> {
             console.log('concurrency ==', this.concurrency);
             this.queue.process(type, this.concurrency, (job, done) => {
-                console.log('start process =', job.data);
+                console.log('start consume job', job.data);
 
 
                 this.collector.start = job.data.min;

@@ -74,13 +74,14 @@ var GetMongoData = (function (_super) {
             // console.log('this ==', this);
             //this.options = _.extend(this.options, {limit: this.size, skip: this.start});
             //console.log(this.options);
-            console.log('this.size', _this.size);
+            console.log('Start to get mongo Data', _this.filter, _this.options, _this.start);
             _this.collection
-                .find(_this.filter, _this.options)
+                .find(_this.filter)
+                .limit(_this.size)
                 .skip(_this.start)
                 .toArray(function (err, docs) {
                 //console.log(docs);
-                console.log('docs.length', docs.length);
+                console.log('we get mongo data ', docs.length);
                 _this.data = docs;
                 resolve();
             });

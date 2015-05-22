@@ -50,6 +50,9 @@ export class GetMongoData extends GetDataMaster {
                 throw new Error('Unable to connect to database: "' + e + '"');
             });
         })
+
+
+
     }
 
 
@@ -87,20 +90,21 @@ export class GetMongoData extends GetDataMaster {
             if (!this.options) this.options = {};
 
             if (this.size) this.options.limit = this.size;
+
             // console.log('this ==', this);
 
             //this.options = _.extend(this.options, {limit: this.size, skip: this.start});
             //console.log(this.options);
-            console.log('this.size', this.size);
+            console.log('Start to get mongo Data', this.filter, this.options, this.start);
+
             this.collection
-                .find(this.filter, this.options)
-                //.limit(this.size)
+                .find(this.filter)
+                .limit(this.size)
                 //.limit(80)
                 .skip(this.start)
                 .toArray((err, docs)=> {
                     //console.log(docs);
-                    console.log('docs.length', docs.length);
-
+                    console.log('we get mongo data ', docs.length);
                     this.data = docs;
                     resolve();
                 });
@@ -120,5 +124,4 @@ export class GetMongoData extends GetDataMaster {
 
 
 }
-
 

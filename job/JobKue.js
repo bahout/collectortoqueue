@@ -83,7 +83,7 @@ var JobKue = (function (_super) {
         return new Promise(function (resolve, reject) {
             console.log('concurrency ==', _this.concurrency);
             _this.queue.process(type, _this.concurrency, function (job, done) {
-                console.log('start process =', job.data);
+                console.log('start consume job', job.data);
                 _this.collector.start = job.data.min;
                 _this.collector.size = job.data.size;
                 _this.collector.filter = job.data.condition;
