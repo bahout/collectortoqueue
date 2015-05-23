@@ -2,8 +2,8 @@
  * Created by nicolasbahout on 22/05/15.
  */
 // worker.js
-var _ = require('lodash'), kue = require('kue'), q = require('q'), path = require('path'), sails = require('sails');
-var configData;
+var _ = require('lodash'), kue = require('kue'), q = require('q'), path = require('path'), findParentDir = require('find-parent-dir'), sails = require('sails');
+var configData, localDir;
 module.exports = function (conf) {
     //console.log(configData);
     console.log('start');
@@ -43,9 +43,15 @@ module.exports = function (conf) {
                 };
             }
         }
+        if (__dirname.indexOf(/node_modules/) == -1) {
+            localDir = __dirname + path.sep + '..' + path.sep;
+        }
+        else {
+            localDir = __dirname + path.sep + '..' + path.sep + '..' + path.sep;
+        }
         sails.load({
             paths: {
-                models: __dirname + path.sep + '..' + path.sep + conf.directory.models
+                models: localDir + conf.directory.models
             },
             log: { level: 'silly' },
             hooks: {
@@ -70,10 +76,10 @@ module.exports = function (conf) {
             sails.log.info("Starting kue");
             var kue_engine = sails.config.kue;
             //register kue.
-            sails.log.info("Registering jobs ", __dirname + path.sep + '..' + path.sep + conf.directory.jobs);
+            sails.log.info("Registering jobs ", localDir + conf.directory.jobs);
             var jobs = require('include-all')({
                 // dirname: __dirname + '/task',
-                dirname: __dirname + path.sep + '..' + path.sep + conf.directory.jobs,
+                dirname: localDir + conf.directory.jobs,
                 filter: /(.+)\.js$/,
                 excludeDirs: /^\.(git|svn)$/,
                 optional: true
