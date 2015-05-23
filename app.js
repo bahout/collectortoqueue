@@ -77,8 +77,8 @@ module.exports = function (conf) {
             var kue_engine = sails.config.kue;
             //register kue.
             sails.log.info("Registering jobs ", localDir + conf.directory.jobs);
+            //process .........
             var jobs = require('include-all')({
-                // dirname: __dirname + '/task',
                 dirname: localDir + conf.directory.jobs,
                 filter: /(.+)\.js$/,
                 excludeDirs: /^\.(git|svn)$/,
@@ -90,7 +90,7 @@ module.exports = function (conf) {
                 sails.log.info("Registering kue handler: " + name);
                 kue_engine.process(name, job);
             });
-            // kueHelper.hello();
+            //process kue ....
             kue_engine.on('job complete', function (id) {
                 sails.log.info("Removing completed job: " + id + ' ' + new Date());
                 kue.Job.get(id, function (err, job) {
