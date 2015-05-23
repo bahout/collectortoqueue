@@ -91,7 +91,7 @@ export class JobKue extends JobMaster {
 
 
     /**
-     * Task are consume here
+     * Get Task and Executte
      * @param type
      */
     execTask(type) {

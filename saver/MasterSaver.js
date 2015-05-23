@@ -3,6 +3,7 @@
  */
 var MasterSaver = (function () {
     function MasterSaver() {
+        this.data = [];
     }
     return MasterSaver;
 })();

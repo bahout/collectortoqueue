@@ -72,6 +72,12 @@ export class GetDataMaster {
         this.txtdb.push('/' + this.name + '/' + this.database + '/' + this.table, this.start)
     }
 
+    countElement() {
+        return new Promise((resolve, reject)=> {
+            console.log('countElement has to be defined');
+            reject('countElement has to be defined for childreen methods')
+        })
+    }
 
     /**
      * Delete Message

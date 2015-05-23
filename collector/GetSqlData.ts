@@ -53,20 +53,18 @@ export class GetSqlData extends GetDataMaster {
 
 
     countElement() {
-        return ()=> {
-            return new Promise((resolve, reject)=> {
-                if (this.db) {
-                    this.getElement(this.mysqlCount)
-                        .then(()=> {
-                            this.nbElements = this.rows[0]['count(*)'];
-                            console.log('this.nbElements ', this.nbElements);
-                            resolve()
-                        })
-                } else {
+        return new Promise((resolve, reject)=> {
+            if (this.db) {
+                this.getElement(this.mysqlCount)
+                    .then(()=> {
+                        this.nbElements = this.rows[0]['count(*)'];
+                        console.log('this.nbElements ', this.nbElements);
+                        resolve()
+                    })
+            } else {
 
-                }
-            })
-        }
+            }
+        })
     }
 
     mysqlExpression() {
@@ -94,7 +92,6 @@ export class GetSqlData extends GetDataMaster {
         })
 
     }
-
 
 
     _getData(nbmessage = 1) {

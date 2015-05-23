@@ -8,7 +8,7 @@ var app = express();
 var Ui2 = (function () {
     function Ui2(redisconf, port) {
         if (port === void 0) { port = 3001; }
-        console.log(redisconf);
+        //console.log(redisconf);
         kue.createQueue({ redis: redisconf });
         ui.setup({
             apiURL: '/api',
@@ -20,7 +20,7 @@ var Ui2 = (function () {
         // Mount UI
         app.use('/kue', ui.app);
         app.listen(port);
-        console.log('server is running in port ' + port + '/kue');
+        console.log('\n===> server is running\nOpen your navigation in: http://yourHost:' + port + '/kue' + '\n');
     }
     return Ui2;
 })();

@@ -74,7 +74,7 @@ var JobKue = (function (_super) {
         });
     };
     /**
-     * Task are consume here
+     * Get Task and Executte
      * @param type
      */
     JobKue.prototype.execTask = function (type) {

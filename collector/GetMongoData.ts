@@ -35,6 +35,7 @@ export class GetMongoData extends GetDataMaster {
 
 
     init(collectionName = this.collectionName) {
+        console.log('mongo init collector');
         this.collectionName = collectionName;
         return new Promise((resolve, reject)=> {
             console.log('this.url', this.url);
@@ -49,6 +50,36 @@ export class GetMongoData extends GetDataMaster {
                 throw new Error('Unable to connect to database: "' + e + '"');
             });
         })
+
+
+
+    }
+
+
+    countElement() {
+        return new Promise((resolve, reject)=> {
+            if (!this.filter) this.filter = {};
+            if (!this.options) this.options = {};
+
+            var cursor = this.collection
+                .find(this.filter, this.options);
+
+
+            cursor.count((err, count)=> {
+                //console.log(count);
+                if (count) {
+                    this.nbElements = count;
+                    //console.log('this.nbElements ==>', count)
+                    resolve();
+                }
+                else {
+                    reject(err);
+                }
+
+            })
+
+        })
+
     }
 
 
@@ -58,14 +89,22 @@ export class GetMongoData extends GetDataMaster {
             if (!this.filter) this.filter = {};
             if (!this.options) this.options = {};
 
+            if (this.size) this.options.limit = this.size;
+
+            // console.log('this ==', this);
+
             //this.options = _.extend(this.options, {limit: this.size, skip: this.start});
             //console.log(this.options);
+            console.log('Start to get mongo Data', this.filter, this.options, this.start);
+
             this.collection
-                .find(this.filter, this.options)
+                .find(this.filter)
                 .limit(this.size)
+                //.limit(80)
                 .skip(this.start)
                 .toArray((err, docs)=> {
                     //console.log(docs);
+                    console.log('we get mongo data ', docs.length);
                     this.data = docs;
                     resolve();
                 });
@@ -85,5 +124,4 @@ export class GetMongoData extends GetDataMaster {
 
 
 }
-
 

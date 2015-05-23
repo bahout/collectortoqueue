@@ -43,20 +43,18 @@ var GetSqlData = (function (_super) {
     };
     GetSqlData.prototype.countElement = function () {
         var _this = this;
-        return function () {
-            return new Promise(function (resolve, reject) {
-                if (_this.db) {
-                    _this.getElement(_this.mysqlCount)
-                        .then(function () {
-                        _this.nbElements = _this.rows[0]['count(*)'];
-                        console.log('this.nbElements ', _this.nbElements);
-                        resolve();
-                    });
-                }
-                else {
-                }
-            });
-        };
+        return new Promise(function (resolve, reject) {
+            if (_this.db) {
+                _this.getElement(_this.mysqlCount)
+                    .then(function () {
+                    _this.nbElements = _this.rows[0]['count(*)'];
+                    console.log('this.nbElements ', _this.nbElements);
+                    resolve();
+                });
+            }
+            else {
+            }
+        });
     };
     GetSqlData.prototype.mysqlExpression = function () {
         var _this = this;

@@ -24,6 +24,7 @@ var GetMongoData = (function (_super) {
     GetMongoData.prototype.init = function (collectionName) {
         var _this = this;
         if (collectionName === void 0) { collectionName = this.collectionName; }
+        console.log('mongo init collector');
         this.collectionName = collectionName;
         return new Promise(function (resolve, reject) {
             console.log('this.url', _this.url);
@@ -37,6 +38,28 @@ var GetMongoData = (function (_super) {
             });
         });
     };
+    GetMongoData.prototype.countElement = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if (!_this.filter)
+                _this.filter = {};
+            if (!_this.options)
+                _this.options = {};
+            var cursor = _this.collection
+                .find(_this.filter, _this.options);
+            cursor.count(function (err, count) {
+                //console.log(count);
+                if (count) {
+                    _this.nbElements = count;
+                    //console.log('this.nbElements ==>', count)
+                    resolve();
+                }
+                else {
+                    reject(err);
+                }
+            });
+        });
+    };
     GetMongoData.prototype._getData = function (nbmessage) {
         var _this = this;
         if (nbmessage === void 0) { nbmessage = 1; }
@@ -46,14 +69,19 @@ var GetMongoData = (function (_super) {
                 _this.filter = {};
             if (!_this.options)
                 _this.options = {};
+            if (_this.size)
+                _this.options.limit = _this.size;
+            // console.log('this ==', this);
             //this.options = _.extend(this.options, {limit: this.size, skip: this.start});
             //console.log(this.options);
+            console.log('Start to get mongo Data', _this.filter, _this.options, _this.start);
             _this.collection
-                .find(_this.filter, _this.options)
+                .find(_this.filter)
                 .limit(_this.size)
                 .skip(_this.start)
                 .toArray(function (err, docs) {
                 //console.log(docs);
+                console.log('we get mongo data ', docs.length);
                 _this.data = docs;
                 resolve();
             });
