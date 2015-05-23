@@ -60,7 +60,6 @@ module.exports = function (conf) {
             localDir = __dirname + path.sep + '..' + path.sep
         } else {
             localDir = __dirname + path.sep + '..' + path.sep + '..' + path.sep
-
         }
 
         sails.load({
