@@ -21,4 +21,4 @@ module.exports = {
     Ui: ui_1.Ui,
     Ui2: kue_ui_1.Ui2
 };
-//# sourceMappingURL=app.js.map
+//# sourceMappingURL=appold.js.map

@@ -7,6 +7,7 @@
 var _ = require('lodash'),
     kue = require('kue'),
     q = require('q'),
+    path = require('path'),
     sails = require('sails');
 var configData;
 
@@ -56,7 +57,7 @@ module.exports = function (conf) {
 
         sails.load({
             paths: {
-                models: '/Users/nicolasbahout/Sites/cl-task/models'
+                models: __dirname + path.sep + '..' + path.sep + conf.directory.models
             },
             log: {level: 'silly'},
             hooks: {
@@ -83,14 +84,16 @@ module.exports = function (conf) {
             var kue_engine = sails.config.kue;
 
             //register kue.
-            sails.log.info("Registering jobs");
+            sails.log.info("Registering jobs ", __dirname + path.sep + '..' + path.sep + conf.directory.jobs);
             var jobs = require('include-all')({
                 // dirname: __dirname + '/task',
-                dirname: __dirname + '/..' + conf.directory,
+                dirname: __dirname + path.sep + '..' + path.sep + conf.directory.jobs,
                 filter: /(.+)\.js$/,
                 excludeDirs: /^\.(git|svn)$/,
                 optional: true
             });
+
+            sails.log.info("jobs list ", jobs);
 
 
             _.forEach(jobs, function (job, name) {
@@ -99,7 +102,7 @@ module.exports = function (conf) {
                 kue_engine.process(name, job);
             });
 
-           // kueHelper.hello();
+            // kueHelper.hello();
 
 
             kue_engine.on('job complete', function (id) {
