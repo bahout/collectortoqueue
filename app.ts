@@ -8,8 +8,6 @@ var _ = require('lodash'),
     kue = require('kue'),
     q = require('q'),
     path = require('path'),
-    findParentDir = require('find-parent-dir'),
-
     sails = require('sails');
 var configData, localDir;
 
@@ -56,7 +54,7 @@ module.exports = function (conf) {
             }
         }
 
-        if (__dirname.indexOf(/node_modules/) == -1) {
+        if (__dirname.indexOf('node_modules') == -1) {
             localDir = __dirname + path.sep + '..' + path.sep
         } else {
             localDir = __dirname + path.sep + '..' + path.sep + '..' + path.sep

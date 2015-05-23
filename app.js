@@ -2,7 +2,7 @@
  * Created by nicolasbahout on 22/05/15.
  */
 // worker.js
-var _ = require('lodash'), kue = require('kue'), q = require('q'), path = require('path'), findParentDir = require('find-parent-dir'), sails = require('sails');
+var _ = require('lodash'), kue = require('kue'), q = require('q'), path = require('path'), sails = require('sails');
 var configData, localDir;
 module.exports = function (conf) {
     //console.log(configData);
@@ -43,7 +43,7 @@ module.exports = function (conf) {
                 };
             }
         }
-        if (__dirname.indexOf(/node_modules/) == -1) {
+        if (__dirname.indexOf('node_modules') == -1) {
             localDir = __dirname + path.sep + '..' + path.sep;
         }
         else {

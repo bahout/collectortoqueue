@@ -1,6 +1,6 @@
 {
   "name": "collectortoqueue",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Tools for node Kue. Take data from ONE Location do some comute and Save data in another location",
   "main": "app.js",
   "directories": {
@@ -22,7 +22,6 @@
     "bluebird": "^2.9.25",
     "documentdb": "^1.0.0",
     "express": "^4.12.3",
-    "find-parent-dir": "^0.3.0",
     "include-all": "^0.1.6",
     "kue": "^0.8.12",
     "kue-ui": "^0.1.0",
