@@ -1,6 +1,6 @@
 {
   "name": "collectortoqueue",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Tools for node Kue. Take data from ONE Location do some comute and Save data in another location",
   "main": "app.js",
   "directories": {
@@ -29,6 +29,8 @@
     "mongodb": "^2.0.28",
     "mysql": "^2.6.2",
     "node-json-db": "^0.4.5",
-    "q": "^1.4.1"
+    "q": "^1.4.1",
+    "sails": "^0.11.0",
+    "sails-mongo": "^0.11.2"
   }
 }

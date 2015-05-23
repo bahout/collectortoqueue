@@ -1,16 +1,9 @@
 /**
  * Created by nicolasbahout on 26/04/15.
  */
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
 var Promise = require('bluebird');
 var _ = require('lodash');
 var async = require('async');
-var JobMaster_1 = require('./JobMaster');
 var kue = require('kue');
 /**
  * Kue has to have 2 methodes
@@ -18,8 +11,7 @@ var kue = require('kue');
  * Messages are stored in Kue.messages Array
  * 2) kue.deleteMessage(oneMessage) in Order
  */
-var JobKue = (function (_super) {
-    __extends(JobKue, _super);
+var JobKue = (function () {
     //messages
     /**
      *
@@ -27,18 +19,9 @@ var JobKue = (function (_super) {
      * @param GetDataMaster
      * @param {concurrency} Nb job done in parallele
      */
-    function JobKue(redisconf, collector, saver, type) {
-        _super.call(this, collector);
+    function JobKue() {
         this.concurrency = 1;
         this.removeOnComplete = true;
-        console.log('redisconf from constructor', redisconf);
-        this.queue = kue.createQueue({ redis: redisconf, disableSearch: true });
-        this.queue.watchStuckJobs();
-        if (saver) {
-            this.saver = saver;
-        }
-        this.name = 'JobKue';
-        this.end();
     }
     JobKue.prototype.remove = function (type, status) {
         if (status === void 0) { status = 'inactive'; }
@@ -76,72 +59,32 @@ var JobKue = (function (_super) {
      * Get Task and Execute
      * @param type
      */
-    JobKue.prototype.consume = function (type) {
+    JobKue.prototype.consume = function (comute) {
         var _this = this;
-        console.log('startprocess execTask', type, this.concurrency);
+        //creat a queue
+        var q = async.queue(comute, this.concurrency);
         var count = 0;
-        return new Promise(function (resolve, reject) {
-            console.log('concurrency ==', _this.concurrency);
-            _this.queue.process(type, _this.concurrency, function (job, done) {
-                console.log('start consume job', job.data);
-                _this.collector.start = job.data.min;
-                _this.collector.size = job.data.size;
-                _this.collector.filter = job.data.condition;
-                _this.saver
-                    .init();
-                _this.collector
-                    .init()
-                    .then(_this.collector.getData())
-                    .then(function () {
-                    console.log(_this.collector.data.length);
-                    console.log('all data has been retrived from database (this.data)');
-                    //done is to send when all data has be process
-                    //creat a queue
-                    var q = async.queue(_this.comute, _this.concurrency);
-                    var count = 0;
-                    //add data to queue
-                    _(_this.collector.data).forEach(function (ele) {
-                        q.push(ele, function (err, data) {
-                            //console.log('data ==>', data);
-                            count++;
-                            _this.saver.data.push(data);
-                            console.log('finished processing ' + count);
-                        });
-                    }).value();
-                    // assign a callback
-                    q.drain = function () {
-                        console.log('all items have been processed');
-                        //exit of queue Kue
-                        _this.saver.insertDocuments(_this.saver.data).then(function () {
-                            console.log('all items have been saved');
-                            _this.saver.data = [];
-                            done();
-                            //exit of promises
-                            resolve();
-                        });
-                    };
-                });
-                /* this.unitTask(job.data)
-                 .then(()=> {
-                 count++;
-                 done();
-                 if (count == this.concurrency) resolve();
-
-                 // done();
-                 //return resolve()
-                 }).catch((e)=> {
-                 count++;
-                 console.log('error in task', e);
-                 done(new Error('error in task'));
-                 if (count == this.concurrency) resolve();
-
-                 //done(new Error('error in task' + e));
-                 // done(new Error('error in task'));
-                 //return resolve()
-                 })*/
+        //add data to queue
+        _(this.collector.data).forEach(function (ele) {
+            q.push(ele, function (err, data) {
+                //console.log('data ==>', data);
+                count++;
+                _this.saver.data.push(data);
+                console.log('finished processing ' + count);
             });
-            //resolve()
-        });
+        }).value();
+        // assign a callback
+        q.drain = function () {
+            console.log('all items have been processed');
+            //exit of queue Kue
+            _this.saver.insertDocuments(_this.saver.data).then(function () {
+                console.log('all items have been saved');
+                _this.saver.data = [];
+                done();
+                //exit of promises
+                resolve();
+            });
+        };
     };
     JobKue.prototype.commute = function (data, cb) {
     };
@@ -210,6 +153,6 @@ var JobKue = (function (_super) {
         }, interval);
     };
     return JobKue;
-})(JobMaster_1.JobMaster);
+})();
 exports.JobKue = JobKue;
 //# sourceMappingURL=JobKue.js.map

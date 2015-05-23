@@ -15,7 +15,7 @@ import kue = require('kue');
  * Messages are stored in Kue.messages Array
  * 2) kue.deleteMessage(oneMessage) in Order
  */
-export class JobKue extends JobMaster {
+export class JobKue {
     concurrency = 1;
     //getDataMaster;
     name;
@@ -33,16 +33,8 @@ export class JobKue extends JobMaster {
      * @param GetDataMaster
      * @param {concurrency} Nb job done in parallele
      */
-    constructor(redisconf, collector?, saver?, type?) {
-        super(collector);
-        console.log('redisconf from constructor', redisconf);
-        this.queue = kue.createQueue({redis: redisconf, disableSearch: true});
-        this.queue.watchStuckJobs();
-        if (saver) {
-            this.saver = saver;
-        }
-        this.name = 'JobKue';
-        this.end();
+    constructor() {
+
     }
 
 
@@ -93,86 +85,36 @@ export class JobKue extends JobMaster {
      * Get Task and Execute
      * @param type
      */
-    consume(type) {
-        console.log('startprocess execTask', type, this.concurrency);
+    consume(comute) {
+        //creat a queue
+        var q = async.queue(comute, this.concurrency);
+
         var count = 0;
-        return new Promise((resolve, reject)=> {
-            console.log('concurrency ==', this.concurrency);
-            this.queue.process(type, this.concurrency, (job, done) => {
-                console.log('start consume job', job.data);
-
-
-                this.collector.start = job.data.min;
-                this.collector.size = job.data.size;
-                this.collector.filter = job.data.condition;
-
-                this.saver
-                    .init();
-
-                this.collector
-                    .init()
-                    .then(this.collector.getData())
-                    .then(()=> {
-
-                        console.log(this.collector.data.length);
-
-                        console.log('all data has been retrived from database (this.data)');
-                        //done is to send when all data has be process
-
-                        //creat a queue
-                        var q = async.queue(this.comute, this.concurrency);
-
-                        var count = 0;
-                        //add data to queue
-                        _(this.collector.data).forEach((ele)=> {
-                            q.push(ele, (err, data)=> {
-                                //console.log('data ==>', data);
-                                count++;
-                                this.saver.data.push(data);
-                                console.log('finished processing ' + count);
-                            });
-                        }).value();
-
-                        // assign a callback
-                        q.drain = () => {
-                            console.log('all items have been processed');
-                            //exit of queue Kue
-                            this.saver.insertDocuments(this.saver.data).then(()=> {
-                                console.log('all items have been saved');
-
-                                this.saver.data = [];
-                                done();
-                                //exit of promises
-                                resolve()
-                            })
-
-                        };
-
-
-                    });
-
-
-                /* this.unitTask(job.data)
-                 .then(()=> {
-                 count++;
-                 done();
-                 if (count == this.concurrency) resolve();
-
-                 // done();
-                 //return resolve()
-                 }).catch((e)=> {
-                 count++;
-                 console.log('error in task', e);
-                 done(new Error('error in task'));
-                 if (count == this.concurrency) resolve();
-
-                 //done(new Error('error in task' + e));
-                 // done(new Error('error in task'));
-                 //return resolve()
-                 })*/
+        //add data to queue
+        _(this.collector.data).forEach((ele)=> {
+            q.push(ele, (err, data)=> {
+                //console.log('data ==>', data);
+                count++;
+                this.saver.data.push(data);
+                console.log('finished processing ' + count);
             });
-            //resolve()
-        })
+        }).value();
+
+        // assign a callback
+        q.drain = () => {
+            console.log('all items have been processed');
+            //exit of queue Kue
+            this.saver.insertDocuments(this.saver.data).then(()=> {
+                console.log('all items have been saved');
+
+                this.saver.data = [];
+                done();
+                //exit of promises
+                resolve()
+            })
+
+        };
+
 
     }
 

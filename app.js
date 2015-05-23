@@ -1,24 +1,106 @@
 /**
- * Created by nicolasbahout on 02/05/15.
+ * Created by nicolasbahout on 22/05/15.
  */
-var GetSqlData_1 = require('./collector/GetSqlData');
-var GetArrayData_1 = require('./collector/GetArrayData');
-var GetMongoData_1 = require('./collector/GetMongoData');
-var GetTxtData_1 = require('./collector/GetTxtData');
-var JobKue_1 = require('./job/JobKue');
-var MongoSaver_1 = require('./saver/MongoSaver');
-var DocumentDbSaver_1 = require('./saver/DocumentDbSaver');
-var ui_1 = require('./ui/ui');
-var kue_ui_1 = require('./ui/kue-ui');
-module.exports = {
-    GetSqlData: GetSqlData_1.GetSqlData,
-    GetTxtData: GetTxtData_1.GetTxtData,
-    GetMongoData: GetMongoData_1.GetMongoData,
-    GetArrayData: GetArrayData_1.GetArrayData,
-    JobKue: JobKue_1.JobKue,
-    MongoSaver: MongoSaver_1.MongoSaver,
-    DocumentDbSaver: DocumentDbSaver_1.DocumentDbSaver,
-    Ui: ui_1.Ui,
-    Ui2: kue_ui_1.Ui2
+// worker.js
+var _ = require('lodash'), kue = require('kue'), q = require('q'), sails = require('sails');
+var configData;
+module.exports = function (conf) {
+    //console.log(configData);
+    console.log('start');
+    module.exports.myConf = conf;
+    process.chdir(__dirname);
+    // Ensure a "sails" can be located:
+    (function () {
+        var sails;
+        try {
+            sails = require('sails');
+        }
+        catch (e) {
+            console.error('To run an app using `node app.js`, you usually need to have a version of `sails` installed in the same directory as your app.');
+            console.error('To do that, run `npm install sails`');
+            console.error('');
+            console.error('Alternatively, if you have sails installed globally (i.e. you did `npm install -g sails`), you can use `sails lift`.');
+            console.error('When you run `sails lift`, your app will still use a local `./node_modules/sails` dependency if it exists,');
+            console.error('but if it doesn\'t, the app will run with the global sails instead!');
+            return;
+        }
+        // Try to get `rc` dependency
+        var rc;
+        try {
+            rc = require('rc');
+        }
+        catch (e0) {
+            try {
+                rc = require('sails/node_modules/rc');
+            }
+            catch (e1) {
+                console.error('Could not find dependency: `rc`.');
+                console.error('Your `.sailsrc` file(s) will be ignored.');
+                console.error('To resolve this, run:');
+                console.error('npm install rc --save');
+                rc = function () {
+                    return {};
+                };
+            }
+        }
+        sails.load({
+            paths: {
+                models: '/Users/nicolasbahout/Sites/cl-task/models'
+            },
+            log: { level: 'silly' },
+            hooks: {
+                blueprints: false,
+                controllers: false,
+                cors: false,
+                csrf: false,
+                grunt: false,
+                //http: false,
+                i18n: false,
+                logger: false,
+                policies: false,
+                pubsub: false,
+                //pubsub: require('pubsub-emitter'),
+                request: false,
+                responses: false,
+                session: false,
+                sockets: false,
+                views: false
+            }
+        }, function (err, app) {
+            sails.log.info("Starting kue");
+            var kue_engine = sails.config.kue;
+            //register kue.
+            sails.log.info("Registering jobs");
+            var jobs = require('include-all')({
+                // dirname: __dirname + '/task',
+                dirname: __dirname + '/..' + conf.directory,
+                filter: /(.+)\.js$/,
+                excludeDirs: /^\.(git|svn)$/,
+                optional: true
+            });
+            _.forEach(jobs, function (job, name) {
+                console.log(job);
+                sails.log.info("Registering kue handler: " + name);
+                kue_engine.process(name, job);
+            });
+            // kueHelper.hello();
+            kue_engine.on('job complete', function (id) {
+                sails.log.info("Removing completed job: " + id + ' ' + new Date());
+                kue.Job.get(id, function (err, job) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    if (job)
+                        job.remove();
+                });
+            });
+            process.once('SIGTERM', function (sig) {
+                kue_engine.shutdown(function (err) {
+                    console.log('Kue is shut down.', err || '');
+                    process.exit(0);
+                }, 5000);
+            });
+        });
+    })();
 };
 //# sourceMappingURL=app.js.map
