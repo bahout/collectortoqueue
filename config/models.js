@@ -8,6 +8,8 @@
  * For more info on Sails models, see:
  * http://sailsjs.org/#/documentation/concepts/ORM
  */
+app = require('../app');
+var conf = app.myConf;
 
 module.exports.models = {
 
@@ -18,6 +20,7 @@ module.exports.models = {
      *                                                                          *
      ***************************************************************************/
     // connection: 'localDiskDb',
+    connection: conf.defaultDatabase,
 
     /***************************************************************************
      *                                                                          *

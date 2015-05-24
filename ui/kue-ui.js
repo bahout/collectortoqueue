@@ -8,8 +8,7 @@ var app = express();
 var Ui2 = (function () {
     function Ui2(redisconf, port) {
         if (port === void 0) { port = 3001; }
-        //console.log(redisconf);
-        kue.createQueue({ redis: redisconf });
+        kue.createQueue({ redis: redisconf.redis });
         ui.setup({
             apiURL: '/api',
             baseURL: '/kue',
