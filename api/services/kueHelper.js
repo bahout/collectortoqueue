@@ -31,7 +31,8 @@ function _queueProcess(col, comute, concurrency) {
         };
     });
 }
-function produce(modelName, kue_engine, options) {
+function produce(kue_engine, options) {
+    var modelName = options.model;
     options.nowDate = new Date();
     return new Promise(function (resolve, reject) {
         return getLastTouch(modelName, options)
@@ -142,7 +143,7 @@ function sendJobs(kue_engine, options) {
         var arr = [];
         var condition = options.condition || {};
         var concurrency = options.concurrency || 1;
-        var kueName = options.kueName || 'default';
+        var kueName = options.name || 'default';
         for (var i = num; i < max + 1; i = i + step) {
             arr.push({
                 min: i,
@@ -184,7 +185,10 @@ function updateAndSave(modelFrom, modelTo, comute, options) {
             return _queueProcess(col, comute, options.concurrency || 1);
         })
             .then(function (col) {
-            console.log('saved data 1');
+            col = _(col)
+                .flatten()
+                .compact()
+                .value();
             return ModelTo
                 .findOrCreate({
                 where: {

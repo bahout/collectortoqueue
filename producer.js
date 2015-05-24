@@ -88,8 +88,10 @@ module.exports = function (conf) {
             //sails.log.info("producers list ", producers);
             _.forEach(producers, function (options, name) {
                 console.log('function producer==>', options);
+                options.name = name;
+                options.model;
                 kueHelper
-                    .produce(name, kue_engine, options)
+                    .produce(kue_engine, options)
                     .then(function () {
                     console.log(name + ' produce done');
                 });
@@ -97,18 +99,26 @@ module.exports = function (conf) {
                 //kue_engine.process(name, job);
             });
             //producers kue ....
-            /*kue_engine.on('job complete', function (id) {
-             sails.log.info("Removing completed job: " + id + ' ' + new Date());
-             kue.Job.get(id, function (err, job) {
-             if (err) {
-             console.log(err)
-             }
-             if (job) job.remove();
-             });
-             });*/
-            /*  kueHelper.removeAll('findwebsite', kue, 'inactive');
-              kueHelper.removeAll('findwebsite', kue, 'active');
-  */
+            kue_engine.on('job complete', function (id) {
+                sails.log.info("Removing completed job: " + id + ' ' + new Date());
+                kue.Job.get(id, function (err, job) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    if (job)
+                        job.remove();
+                });
+            });
+            /*   kueHelper.removeAll('Getinfofromurl', kue, 'inactive');
+               kueHelper.removeAll('Getinfofromurl', kue, 'complete');
+               kueHelper.removeAll('Getinfofromurl', kue, 'active');
+               kueHelper.removeAll('findwebsite', kue, 'inactive');
+               kueHelper.removeAll('findwebsite', kue, 'active');
+               kueHelper.removeAll('Findwebsite', kue, 'inactive');
+               kueHelper.removeAll('Findwebsite', kue, 'active');
+               kueHelper.removeAll('Findwebsite', kue, 'inactive');
+               kueHelper.removeAll('Findwebsite', kue, 'complete');
+               kueHelper.removeAll('findwebsite', kue, 'complete');*/
             process.once('SIGTERM', function (sig) {
                 kue_engine.shutdown(function (err) {
                     console.log('Kue is shut down.', err || '');
