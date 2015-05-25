@@ -223,10 +223,12 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
         var ModelTo = sails.models[modelTo.toLowerCase()];
 
 
-        console.log('modelFrom ', modelFrom, sails.models[modelFrom.toLowerCase()]);
-        console.log('modelTo ', modelTo, sails.models[modelTo.toLowerCase()]);
-        //console.log('sails.models ', sails.models);
-        sails.log.info(options.condition)
+        /*
+         console.log('modelFrom ', modelFrom, sails.models[modelFrom.toLowerCase()]);
+         console.log('modelTo ', modelTo, sails.models[modelTo.toLowerCase()]);
+         console.log('sails.models ', sails.models);
+         sails.log.info(options.condition)
+         */
 
         return ModelFrom
             .find(options.condition || {})
@@ -241,6 +243,9 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
                     .flatten()
                     .compact()
                     .value();
+
+
+                //console.log('data to save ==>', col);
 
                 if (ModelTo.adapterDictionary.mongo) {
                     var where = {};
@@ -258,17 +263,18 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
                     });
                 }
 
-                //console.log(where);
+                console.log('where ==>',where);
                 //console.log(where[key])
 
-                console.log(ModelTo)
+                //console.log(ModelTo)
                 //console.log(ModelTo.adapterDictionary.mongo);
 
                 return ModelTo
+                    //.create(col)
                     .findOrCreate(where, col)
                     //.create(col)
                     .then(function (data, err) {
-                        console.log(data.email, err)
+                        console.log('===> hello', data, err);
                         if (!err) return resolve(data);
                         if (err) return reject(err);
                     })

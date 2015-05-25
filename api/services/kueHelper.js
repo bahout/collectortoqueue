@@ -180,10 +180,12 @@ function updateAndSave(modelFrom, modelTo, comute, options) {
         var key = options.key || 'id';
         var ModelFrom = sails.models[modelFrom.toLowerCase()];
         var ModelTo = sails.models[modelTo.toLowerCase()];
-        console.log('modelFrom ', modelFrom, sails.models[modelFrom.toLowerCase()]);
-        console.log('modelTo ', modelTo, sails.models[modelTo.toLowerCase()]);
-        //console.log('sails.models ', sails.models);
-        sails.log.info(options.condition);
+        /*
+         console.log('modelFrom ', modelFrom, sails.models[modelFrom.toLowerCase()]);
+         console.log('modelTo ', modelTo, sails.models[modelTo.toLowerCase()]);
+         console.log('sails.models ', sails.models);
+         sails.log.info(options.condition)
+         */
         return ModelFrom
             .find(options.condition || {})
             .limit(options.size || 50)
@@ -196,6 +198,7 @@ function updateAndSave(modelFrom, modelTo, comute, options) {
                 .flatten()
                 .compact()
                 .value();
+            //console.log('data to save ==>', col);
             if (ModelTo.adapterDictionary.mongo) {
                 var where = {};
                 where[key] = col.map(function (d) {
@@ -211,14 +214,14 @@ function updateAndSave(modelFrom, modelTo, comute, options) {
                     return tmp;
                 });
             }
-            //console.log(where);
+            console.log('where ==>', where);
             //console.log(where[key])
-            console.log(ModelTo);
+            //console.log(ModelTo)
             //console.log(ModelTo.adapterDictionary.mongo);
             return ModelTo
                 .findOrCreate(where, col)
                 .then(function (data, err) {
-                console.log(data.email, err);
+                console.log('===> hello', data, err);
                 if (!err)
                     return resolve(data);
                 if (err)
