@@ -3,13 +3,15 @@
  */
 import  Promise = require('bluebird');
 import async = require('async');
+import kue = require('kue');
 
 
 module.exports = {
     updateAndSave: updateAndSave,
     countElementForModel: countElementForModel,
     produce: produce,
-    removeAll: removeAll
+    removeAll: removeAll,
+    resolveStuckjob: resolveStuckjob
 };
 
 
@@ -48,7 +50,7 @@ function produce(kue_engine, options) {
 
     options.nowDate = new Date();
     return new Promise((resolve, reject)=> {
-        return getLastTouch(modelName, options)
+        return getLastTouch(options)
             .then(function (options) {
                 return countElementForModel(modelName, options)
             })
@@ -58,7 +60,7 @@ function produce(kue_engine, options) {
             })
             .then(function (options) {
                 console.log('===>', options);
-                return saveLastTouch(modelName, options)
+                return saveLastTouch(options)
             })
             .then(resolve)
     })
@@ -67,19 +69,18 @@ function produce(kue_engine, options) {
 
 function countElementForModel(modelName, options = {}) {
     return new Promise((resolve, reject)=> {
-            console.log(modelName);
             var Model = sails.models[modelName.toLowerCase()];
 
             if (!options.condition) options.condition = {};
 
             if (options.touch) {
                 options.condition[options.autoUpdateBaseOnField] = {
-                    '>': new Date(options.touch.lastTouch), '<': options.nowDate
+                    '>=': new Date(options.touch.lastTouch), '<': options.nowDate
                 }
             }
             else {
                 options.condition[options.autoUpdateBaseOnField] = {
-                    '>': new Date('2/4/2014'), '<': options.nowDate
+                    '<': options.nowDate
                 }
             }
 
@@ -87,6 +88,7 @@ function countElementForModel(modelName, options = {}) {
                 .count(options.condition)
                 .then(function (num, err) {
                     options.count = num;
+                    console.log('count result for ' + modelName, options.name, num);
                     if (!err) resolve(options);
                     if (err) reject(err)
                 }).catch(function (e) {
@@ -99,11 +101,11 @@ function countElementForModel(modelName, options = {}) {
 }
 
 
-function getLastTouch(modelName, options) {
+function getLastTouch(options) {
     return new Promise((resolve, reject)=> {
-        console.log(modelName);
+        console.log(options.name);
         return Collectortoqueue
-            .findOne({model: modelName})
+            .findOne({model: options.name})
             .then(function afterwards(updated, err) {
                 console.log(err, updated);
                 //if (_.isArray(updated)) updated = _.first(updated);
@@ -116,23 +118,23 @@ function getLastTouch(modelName, options) {
 }
 
 
-function saveLastTouch(modelName, options) {
+function saveLastTouch(options) {
     return new Promise((resolve, reject)=> {
-        console.log(modelName);
+        console.log("saveLastTouch ===>", options.name);
         return Collectortoqueue
-            .findOne({model: modelName})
+            .findOne({model: options.name})
             .then(function (data) {
                 console.log(data);
                 if (data) {
                     return Collectortoqueue
-                        .update({model: modelName}, {
+                        .update({model: options.name}, {
                             lastTouch: new Date()
                         })
                 }
                 else {
                     return Collectortoqueue
                         .create({
-                            model: modelName,
+                            model: options.name,
                             lastTouch: new Date()
                         })
                 }
@@ -156,7 +158,6 @@ function sendJobs(kue_engine, options) {
 
         var num = 0;
         var max = options.count;
-
         var sendJobConcurrency = 20;
 
 
@@ -172,26 +173,26 @@ function sendJobs(kue_engine, options) {
         var concurrency = options.concurrency || 1;
         var kueName = options.name || 'default';
 
+        if (options.key) var key = options.key;
+
         for (var i = num; i < max + 1; i = i + step) {
-            arr.push({
+
+            var items = {
                 min: i,
                 size: step - 1,
                 condition: condition,
-                concurrency: concurrency
-            });
+                concurrency: concurrency,
+            };
+
+            if (key) items['key'] = key;
+
+            arr.push(items);
         }
 
 
         var q = async.queue(function (jobData, callback) {
             //console.log(jobData);
-
-            kue_engine
-                .create(kueName, jobData)
-                .save(function (err) {
-                    //if (!err) console.log(jobData.id);
-                    callback();
-                });
-
+            createJobInKue(kue_engine, kueName, jobData, callback);
         }, sendJobConcurrency);
 
 
@@ -215,8 +216,18 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
 
     return new Promise((resolve, reject)=> {
 
+        var key = options.key || 'id';
+
+
         var ModelFrom = sails.models[modelFrom.toLowerCase()];
         var ModelTo = sails.models[modelTo.toLowerCase()];
+
+
+        console.log('modelFrom ', modelFrom, sails.models[modelFrom.toLowerCase()]);
+        console.log('modelTo ', modelTo, sails.models[modelTo.toLowerCase()]);
+        //console.log('sails.models ', sails.models);
+        sails.log.info(options.condition)
+
         return ModelFrom
             .find(options.condition || {})
             .limit(options.size || 50)
@@ -231,20 +242,38 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
                     .compact()
                     .value();
 
+                if (ModelTo.adapterDictionary.mongo) {
+                    var where = {};
+                    where[key] = col.map(function (d) {
+                        //console.log(key)
+                        return d[key];
+                    });
+                }
+                else {
+                    var where = [];
+                    where = col.map(function (d) {
+                        var tmp = {};
+                        tmp[key] = d[key];
+                        return tmp;
+                    });
+                }
+
+                //console.log(where);
+                //console.log(where[key])
+
+                console.log(ModelTo)
+                //console.log(ModelTo.adapterDictionary.mongo);
 
                 return ModelTo
-                    .findOrCreate({
-                        where: {
-                            id: col.map(function (d) {
-                                return d.id;
-                            })
-                        }
-                    }, col)
+                    .findOrCreate(where, col)
+                    //.create(col)
                     .then(function (data, err) {
+                        console.log(data.email, err)
                         if (!err) return resolve(data);
                         if (err) return reject(err);
                     })
                     .catch(function (err) {
+                        sails.log.error('error during update', err)
                         reject(err);
                     })
 
@@ -270,3 +299,69 @@ function removeAll(type, kue_engine, status = 'inactive') {
         });
     });
 }
+
+/**
+ * If a job is in active mode for more than one hour (interval), it is considered as dead job
+ * ==> we delete it and add it in active queue again
+ * @param interval
+ * @param maxTimeToExecute
+ */
+
+function resolveStuckjob(kue_engine, interval = 60000, maxTimeToExecute = 6000000) {
+    setInterval(() => {
+
+        // first check the active job list (hopefully this is relatively small and cheap)
+        // if this takes longer than a single "interval" then we should consider using
+        // setTimeouts
+        kue_engine.active((err, ids) => {
+
+            // for each id we're going to see how long ago the job was last "updated"
+            async.map(ids, (id, cb) => {
+                // we get the job info from redis
+                kue.Job.get(id, (err, job) => {
+                    if (err) {
+                        throw err;
+                    } // let's think about what makes sense here
+
+                    // we compare the updated_at to current time.
+                    var lastUpdate = +Date.now() - job.updated_at;
+                    if (lastUpdate > maxTimeToExecute) {
+                        console.log('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
+                        console.log('================> ', job.data, job.type);
+
+                        //TODO to remove comment
+                        createJobInKue(kue_engine, job.type, job.data, function () {
+                            console.log('job stuck recreated done done')
+                        });
+                        // either reschedule (re-attempt?) or remove the job.
+
+                        job.remove((err) => {
+
+                        })
+
+
+                    } else {
+                        cb(null);
+                    }
+
+                });
+            });
+        });
+    }, interval);
+};
+
+/**
+ * Kue Wrapper for create a job
+ * @param kue_engine
+ * @param kueName
+ * @param jobData
+ * @param callback
+ */
+var createJobInKue = function (kue_engine, kueName, jobData, callback) {
+    kue_engine
+        .create(kueName, jobData)
+        .save(function (err) {
+            //if (!err) console.log(jobData.id);
+            callback();
+        });
+};

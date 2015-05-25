@@ -106,8 +106,7 @@ module.exports = function (conf) {
 
             _.forEach(producers, function (options, name) {
                 console.log('function producer==>', options);
-                options.name = name;
-                options.model;
+                if (!options.name) options.name = name;
 
                 kueHelper
                     .produce(kue_engine, options)
@@ -132,16 +131,34 @@ module.exports = function (conf) {
                 });
             });
 
-         /*   kueHelper.removeAll('Getinfofromurl', kue, 'inactive');
-            kueHelper.removeAll('Getinfofromurl', kue, 'complete');
-            kueHelper.removeAll('Getinfofromurl', kue, 'active');
-            kueHelper.removeAll('findwebsite', kue, 'inactive');
-            kueHelper.removeAll('findwebsite', kue, 'active');
-            kueHelper.removeAll('Findwebsite', kue, 'inactive');
-            kueHelper.removeAll('Findwebsite', kue, 'active');
-            kueHelper.removeAll('Findwebsite', kue, 'inactive');
-            kueHelper.removeAll('Findwebsite', kue, 'complete');
-            kueHelper.removeAll('findwebsite', kue, 'complete');*/
+
+            // Resolve stuck jobs
+            kueHelper.resolveStuckjob(kue_engine);
+
+            /*   kueHelper.removeAll('Getinfofromurl', kue, 'inactive');
+             kueHelper.removeAll('Getinfofromurl', kue, 'complete');
+             kueHelper.removeAll('Getinfofromurl', kue, 'active');
+             kueHelper.removeAll('findwebsite', kue, 'inactive');
+             kueHelper.removeAll('findwebsite', kue, 'active');
+             kueHelper.removeAll('Findwebsite', kue, 'inactive');
+             kueHelper.removeAll('Findwebsite', kue, 'active');
+             kueHelper.removeAll('Findwebsite', kue, 'inactive');
+             kueHelper.removeAll('Findwebsite', kue, 'complete');
+             kueHelper.removeAll('findwebsite', kue, 'complete');
+
+
+             kueHelper.removeAll('Users', kue, 'active');
+             kueHelper.removeAll('Users', kue, 'inactive');
+             kueHelper.removeAll('Users', kue, 'complete');
+             kueHelper.removeAll('User', kue, 'active');
+             kueHelper.removeAll('User', kue, 'inactive');
+             kueHelper.removeAll('User', kue, 'complete');*/
+            /*
+
+             kueHelper.removeAll('Users2', kue, 'active');
+             kueHelper.removeAll('Users2', kue, 'inactive');
+             kueHelper.removeAll('Users2', kue, 'complete');
+             */
 
 
             process.once('SIGTERM', function (sig) {

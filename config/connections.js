@@ -21,7 +21,6 @@
 app = require('../app');
 var conf = app.myConf;
 
-
 module.exports.connections = {
 
     /***************************************************************************
@@ -43,12 +42,19 @@ module.exports.connections = {
      * Run: npm install sails-mysql                                             *
      *                                                                          *
      ***************************************************************************/
-    someMysqlServer: {
+    Mysql1: {
         adapter: 'sails-mysql',
-        host: 'YOUR_MYSQL_SERVER_HOSTNAME_OR_IP_ADDRESS',
-        user: 'YOUR_MYSQL_USER',
-        password: 'YOUR_MYSQL_PASSWORD',
-        database: 'YOUR_MYSQL_DB'
+        host: conf.Mysql1.host,
+        user: conf.Mysql1.user,
+        password: conf.Mysql1.password,
+        database: conf.Mysql1.db
+    },
+    Mysql2: {
+        adapter: 'sails-mysql',
+        host: conf.Mysql2.host,
+        user: conf.Mysql2.user,
+        password: conf.Mysql2.password,
+        database: conf.Mysql2.db
     },
 
     /***************************************************************************

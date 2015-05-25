@@ -135,6 +135,12 @@ var JobKue = (function (_super) {
             });
         }
     };
+    /**
+     * If a job is in active mode for more than one hour (interval), it is considered as dead job
+     * ==> we delete it and add it in active queue again
+     * @param interval
+     * @param maxTimeToExecute
+     */
     JobKue.prototype.resolveStuckjob = function (interval, maxTimeToExecute) {
         var _this = this;
         if (interval === void 0) { interval = 5000; }

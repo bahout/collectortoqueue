@@ -158,7 +158,12 @@ export class JobKue extends JobMaster {
         }
     }
 
-
+    /**
+     * If a job is in active mode for more than one hour (interval), it is considered as dead job
+     * ==> we delete it and add it in active queue again
+     * @param interval
+     * @param maxTimeToExecute
+     */
     resolveStuckjob(interval = 5000, maxTimeToExecute = 6000000) {
         setInterval(() => {
 
