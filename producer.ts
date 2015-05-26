@@ -10,6 +10,7 @@ var _ = require('lodash'),
     path = require('path'),
     sails = require('sails');
 var app = require('./app');
+var CronJob = require('cron').CronJob;
 
 var configData, localDir;
 
@@ -108,15 +109,15 @@ module.exports = function (conf) {
                 console.log('function producer==>', options);
                 if (!options.name) options.name = name;
 
-                kueHelper
-                    .produce(kue_engine, options)
-                    .then(function () {
-                        console.log(name + ' produce done')
-                    });
-
-
-                sails.log.info("Registering kue producer: " + name);
-                //kue_engine.process(name, job);
+                new CronJob('00 01 * * * *', function () {
+                    kueHelper
+                        .produce(kue_engine, options)
+                        .then(function () {
+                            console.log(name + ' produce done')
+                        });
+                    sails.log.info("Registering kue producer: " + name);
+                    //kue_engine.process(name, job);
+                }, null, true, 'America/Los_Angeles');
             });
 
             //producers kue ....
@@ -166,9 +167,9 @@ module.exports = function (conf) {
              kueHelper.removeAll('Findwebsite2', kue, 'complete');
              */
 
-        /*    kueHelper.removeAll('Findwebsite3', kue, 'active');
-            kueHelper.removeAll('Findwebsite3', kue, 'inactive');
-            kueHelper.removeAll('Findwebsite3', kue, 'complete');*/
+            /*    kueHelper.removeAll('Findwebsite3', kue, 'active');
+             kueHelper.removeAll('Findwebsite3', kue, 'inactive');
+             kueHelper.removeAll('Findwebsite3', kue, 'complete');*/
 
 
             process.once('SIGTERM', function (sig) {

@@ -22,12 +22,12 @@ function _queueProcess(col, comute, concurrency) {
             q.push(ele, function (err, data) {
                 count++;
                 saver.push(data);
-                console.log('finished processing ' + count);
+                sails.log.silly('finished processing ' + count);
             });
         }).value();
         // assign a callback
         q.drain = function () {
-            console.log('all items have been processed');
+            console.log('all task from queue have been processed');
             //exit of queue Kue
             return resolve(saver);
         };
@@ -136,6 +136,10 @@ function sendJobs(kue_engine, options) {
         var num = 0;
         var max = options.count;
         var sendJobConcurrency = 20;
+        if (options.count == 0) {
+            console.log('no job to add');
+            return resolve(options);
+        }
         //if we used autoupdate we can't specify this
         if (!options.autoUpdateBaseOnField) {
             num = options.start || 0;
@@ -186,12 +190,17 @@ function updateAndSave(modelFrom, modelTo, comute, options) {
          console.log('sails.models ', sails.models);
          sails.log.info(options.condition)
          */
+        sails.log.silly('we start to get data from ', modelFrom.toLowerCase());
         return ModelFrom
             .find(options.condition || {})
             .limit(options.size || 50)
             .skip(options.min || 0)
             .then(function (col) {
-            return _queueProcess(col, comute, options.concurrency || 1);
+            sails.log.silly('we successed to have data ', col);
+            if (col.length == 0)
+                return resolve();
+            if (col.length > 0)
+                return _queueProcess(col, comute, options.concurrency || 1);
         })
             .then(function (col) {
             col = _(col)
@@ -226,7 +235,7 @@ function updateAndSave(modelFrom, modelTo, comute, options) {
             return ModelTo
                 .findOrCreate(where, col)
                 .then(function (data, err) {
-                console.log('===> hello', data, err);
+                console.log('data saved', data, err);
                 if (!err)
                     return resolve(data);
                 if (err)
