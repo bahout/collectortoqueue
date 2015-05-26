@@ -50,7 +50,7 @@ export class JobKue extends JobMaster {
     removeAll(type, status = 'inactive') {
         console.log('start remove jobs ', type, ' ', status);
         kue.Job.rangeByType(type, status, 0, 1000000, 'asc', function (err, selectedJobs) {
-            console.log(err, selectedJobs);
+            //console.log(err, selectedJobs);
 
             selectedJobs.forEach(function (job) {
                 //console.log(job);

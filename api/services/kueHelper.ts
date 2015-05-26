@@ -103,7 +103,7 @@ function countElementForModel(modelName, options = {}) {
 
 function getLastTouch(options) {
     return new Promise((resolve, reject)=> {
-        console.log(options.name);
+        console.log('getLastTouch ==>', options.name);
         return Collectortoqueue
             .findOne({model: options.name})
             .then(function afterwards(updated, err) {
@@ -242,10 +242,16 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
                 col = _(col)
                     .flatten()
                     .compact()
+                    .uniq()
                     .value();
 
 
-                //console.log('data to save ==>', col);
+                console.log('data to save ==>', col);
+
+                if (col.length == 0) {
+                    console.log('nothing to save');
+                    return resolve();
+                }
 
                 if (ModelTo.adapterDictionary.mongo) {
                     var where = {};
@@ -263,7 +269,7 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
                     });
                 }
 
-                console.log('where ==>',where);
+                console.log('where ==>', where);
                 //console.log(where[key])
 
                 //console.log(ModelTo)

@@ -1,6 +1,6 @@
 {
   "name": "collectortoqueue",
-  "version": "1.2.11",
+  "version": "1.2.13",
   "description": "Tools for node Kue. Take data from ONE Location do some comute and Save data in another location",
   "main": "app.js",
   "directories": {

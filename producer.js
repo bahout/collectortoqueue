@@ -123,18 +123,23 @@ module.exports = function (conf) {
              kueHelper.removeAll('findwebsite', kue, 'complete');
 
 
-             kueHelper.removeAll('Users', kue, 'active');
+             */
+            /*  kueHelper.removeAll('Users', kue, 'active');
              kueHelper.removeAll('Users', kue, 'inactive');
              kueHelper.removeAll('Users', kue, 'complete');
              kueHelper.removeAll('User', kue, 'active');
              kueHelper.removeAll('User', kue, 'inactive');
              kueHelper.removeAll('User', kue, 'complete');*/
-            /*
-
-             kueHelper.removeAll('Users2', kue, 'active');
+            /* kueHelper.removeAll('Users2', kue, 'active');
              kueHelper.removeAll('Users2', kue, 'inactive');
-             kueHelper.removeAll('Users2', kue, 'complete');
+             kueHelper.removeAll('Users2', kue, 'complete');*/
+            /*    kueHelper.removeAll('Findwebsite2', kue, 'active');
+             kueHelper.removeAll('Findwebsite2', kue, 'inactive');
+             kueHelper.removeAll('Findwebsite2', kue, 'complete');
              */
+            /*    kueHelper.removeAll('Findwebsite3', kue, 'active');
+                kueHelper.removeAll('Findwebsite3', kue, 'inactive');
+                kueHelper.removeAll('Findwebsite3', kue, 'complete');*/
             process.once('SIGTERM', function (sig) {
                 kue_engine.shutdown(function (err) {
                     console.log('Kue is shut down.', err || '');
