@@ -8,10 +8,10 @@ import kue = require('kue');
 
 module.exports = {
     updateAndSave: updateAndSave,
-    countElementForModel: countElementForModel,
     produce: produce,
     removeAll: removeAll,
-    resolveStuckjob: resolveStuckjob
+    resolveStuckjob: resolveStuckjob,
+    resolveFailedjob: resolveFailedjob
 };
 
 
@@ -67,21 +67,34 @@ function produce(kue_engine, options) {
 
 
 function countElementForModel(modelName, options = {}) {
+
     return new Promise((resolve, reject)=> {
             var Model = sails.models[modelName.toLowerCase()];
 
             if (!options.condition) options.condition = {};
 
-            if (options.touch) {
-                options.condition[options.autoUpdateBaseOnField] = {
-                    '>=': new Date(options.touch.lastTouch), '<': options.nowDate
+            //todo it is actually only for a date
+            if (options.autoUpdateBaseOnField) {
+                if (options.touch) {
+                    options.condition[options.autoUpdateBaseOnField] = {
+                        '>=': new Date(options.touch.lastTouch), '<': options.nowDate
+                    }
+                }
+                else {
+                    options.condition[options.autoUpdateBaseOnField] = {
+                        '<': options.nowDate
+                    }
                 }
             }
-            else {
-                options.condition[options.autoUpdateBaseOnField] = {
-                    '<': options.nowDate
-                }
+
+            if (options.touch && options.onlyOnce == true) {
+                //job has already add to kue in previous startup
+
+                //we add a silly condition witch never happens
+                //todo to improve
+                options.condition['onlyOnce123'] = true;
             }
+
 
             return Model
                 .count(options.condition)
@@ -196,7 +209,7 @@ function sendJobs(kue_engine, options) {
 
         var q = async.queue(function (jobData, callback) {
             //console.log(jobData);
-            createJobInKue(kue_engine, kueName, jobData, callback);
+            createJobInKue(kue_engine, kueName, jobData, options, callback);
         }, sendJobConcurrency);
 
 
@@ -241,11 +254,12 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
             .skip(options.min || 0)
             .then(function (col) {
 
-                sails.log.silly('we successed to have data ', col);
+                sails.log.silly('we successed to have data with concurrency', options.concurrency, col);
                 if (col.length == 0) return resolve();
                 if (col.length > 0) return _queueProcess(col, comute, options.concurrency || 1)
             })
             .then(function (col) {
+
 
                 col = _(col)
                     .flatten()
@@ -253,49 +267,88 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
                     .uniq()
                     .value();
 
+                var pulkIds = _(col).pluck(key).value();
 
-                console.log('data to save ==>', col);
+                //console.log('data to save ==>', col);
 
                 if (col.length == 0) {
                     console.log('nothing to save');
                     return resolve();
                 }
 
-                if (ModelTo.adapterDictionary.mongo) {
-                    var where = {};
-                    where[key] = col.map(function (d) {
-                        //console.log(key)
-                        return d[key];
-                    });
-                }
-                else {
-                    var where = [];
-                    where = col.map(function (d) {
-                        var tmp = {};
-                        tmp[key] = d[key];
-                        return tmp;
-                    });
-                }
 
-                console.log('where ==>', where);
+                /*if (ModelTo.adapterDictionary.mongo) {
+                 var where = {};
+                 where[key] = col.map(function (d) {
+                 //console.log(key)
+                 return d[key];
+                 });
+                 }
+                 else {*/
+                /*   var where = [];
+                 where = col.map(function (d) {
+                 var tmp = {};
+
+                 tmp[key] = d[key];
+                 return tmp;
+                 });
+                 // }
+                 */
+                //console.log('where ==>', where);
+                console.log('pulkIds ==>', pulkIds);
                 //console.log(where[key])
 
                 //console.log(ModelTo)
                 //console.log(ModelTo.adapterDictionary.mongo);
 
+                var tps1 = new Date();
+                sails.log.silly('we will saved data in new table', tps1);
+
+                var newVar = {};
+                newVar[key] = pulkIds;
+
                 return ModelTo
                     //.create(col)
-                    .findOrCreate(where, col)
+                    .find(newVar)
+                    .then(function (data, err) {
+                        sails.log.silly('ids founds ?', data);
+                        var pulk2Ids = _(data).pluck(key).value();
+
+                        var idsToSave = _.difference(pulkIds, pulk2Ids);
+
+                        sails.log.silly('idsToSave ', idsToSave);
+
+                        if (idsToSave.length == 0) {
+                            sails.log.silly('data already exist nothing to save');
+                            return resolve()
+                        }
+                        else {
+                            var dataToSave = _(col).map(function (ele) {
+                                if (idsToSave.indexOf(ele[key]) != -1) {
+                                    return ele;
+                                }
+                            })
+                                .compact()
+                                .uniq()
+                                .value();
+
+                            sails.log.silly('data to Create want to create', dataToSave);
+
+                            //todo Maybe update
+                            return ModelTo.create(dataToSave)
+                        }
+                    })
                     //.create(col)
                     .then(function (data, err) {
-                        console.log('data saved', data, err);
+                        sails.log.silly('data saved ', new Date() - tps1, data, err);
                         if (!err) return resolve(data);
                         if (err) return reject(err);
                     })
                     .catch(function (err) {
-                        sails.log.error('error during update', err)
+                        sails.log.error('error during update', err);
                         reject(err);
                     })
+
 
             })
     })
@@ -327,6 +380,50 @@ function removeAll(type, kue_engine, status = 'inactive') {
  * @param maxTimeToExecute
  */
 
+function resolveFailedjob(kue_engine, interval = 60000, maxTimeToExecute = 6000) {
+    setInterval(() => {
+
+        // first check the active job list (hopefully this is relatively small and cheap)
+        // if this takes longer than a single "interval" then we should consider using
+        // setTimeouts
+        kue_engine.failed((err, ids) => {
+
+            // for each id we're going to see how long ago the job was last "updated"
+            async.map(ids, (id, cb) => {
+                // we get the job info from redis
+                kue.Job.get(id, (err, job) => {
+                    if (err) {
+                        throw err;
+                    } // let's think about what makes sense here
+
+                    // we compare the updated_at to current time.
+                    var lastUpdate = +Date.now() - job.updated_at;
+                    if (lastUpdate > maxTimeToExecute) {
+                        console.log('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
+                        console.log('================> ', job.data, job.type);
+
+                        //TODO to remove comment
+                        createJobInKue(kue_engine, job.type, job.data, {}, function () {
+                            console.log('job failed recreated done done')
+                        });
+                        // either reschedule (re-attempt?) or remove the job.
+
+                        job.remove((err) => {
+
+                        })
+
+
+                    } else {
+                        cb(null);
+                    }
+
+                });
+            });
+        });
+    }, interval);
+};
+
+
 function resolveStuckjob(kue_engine, interval = 60000, maxTimeToExecute = 6000000) {
     setInterval(() => {
 
@@ -346,12 +443,12 @@ function resolveStuckjob(kue_engine, interval = 60000, maxTimeToExecute = 600000
                     // we compare the updated_at to current time.
                     var lastUpdate = +Date.now() - job.updated_at;
                     if (lastUpdate > maxTimeToExecute) {
-                        console.log('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
-                        console.log('================> ', job.data, job.type);
+                        sails.log.silly('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
+                        sails.log.silly('================> ', job.data, job.type);
 
                         //TODO to remove comment
-                        createJobInKue(kue_engine, job.type, job.data, function () {
-                            console.log('job stuck recreated done done')
+                        createJobInKue(kue_engine, job.type, job.data, {}, function () {
+                            sails.log.silly('job stuck recreated done done')
                         });
                         // either reschedule (re-attempt?) or remove the job.
 
@@ -377,9 +474,11 @@ function resolveStuckjob(kue_engine, interval = 60000, maxTimeToExecute = 600000
  * @param jobData
  * @param callback
  */
-var createJobInKue = function (kue_engine, kueName, jobData, callback) {
+var createJobInKue = function (kue_engine, kueName, jobData, options, callback) {
     kue_engine
         .create(kueName, jobData)
+        .attempts(options.attempts || 2)
+        .priority(options.priority || 'low')
         .save(function (err) {
             //if (!err) console.log(jobData.id);
             callback();

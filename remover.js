@@ -1,34 +1,23 @@
 /**
  * Created by nicolasbahout on 22/05/15.
  */
-
 // worker.js
-
-var _ = require('lodash'),
-    kue = require('kue'),
-    q = require('q'),
-    path = require('path'),
-    sails = require('sails');
+var _ = require('lodash'), kue = require('kue'), q = require('q'), path = require('path'), sails = require('sails');
 var app = require('./app');
 var CronJob = require('cron').CronJob;
-
 var configData, localDir;
-
 module.exports = function (conf) {
-
     //console.log(conf);
     console.log('start');
-
     module.exports.myConf = conf;
-
     process.chdir(__dirname);
-
-// Ensure a "sails" can be located:
+    // Ensure a "sails" can be located:
     (function () {
         var sails;
         try {
             sails = require('sails');
-        } catch (e) {
+        }
+        catch (e) {
             console.error('To run an app using `node app.js`, you usually need to have a version of `sails` installed in the same directory as your app.');
             console.error('To do that, run `npm install sails`');
             console.error('');
@@ -37,16 +26,16 @@ module.exports = function (conf) {
             console.error('but if it doesn\'t, the app will run with the global sails instead!');
             return;
         }
-
-
         // Try to get `rc` dependency
         var rc;
         try {
             rc = require('rc');
-        } catch (e0) {
+        }
+        catch (e0) {
             try {
                 rc = require('sails/node_modules/rc');
-            } catch (e1) {
+            }
+            catch (e1) {
                 console.error('Could not find dependency: `rc`.');
                 console.error('Your `.sailsrc` file(s) will be ignored.');
                 console.error('To resolve this, run:');
@@ -56,18 +45,17 @@ module.exports = function (conf) {
                 };
             }
         }
-
         if (__dirname.indexOf('node_modules') == -1) {
-            localDir = __dirname + path.sep + '..' + path.sep
-        } else {
-            localDir = __dirname + path.sep + '..' + path.sep + '..' + path.sep
+            localDir = __dirname + path.sep + '..' + path.sep;
         }
-
+        else {
+            localDir = __dirname + path.sep + '..' + path.sep + '..' + path.sep;
+        }
         sails.load({
             paths: {
                 models: localDir + conf.directory.models
             },
-            log: {level: 'silly'},
+            log: { level: 'silly' },
             hooks: {
                 blueprints: false,
                 controllers: false,
@@ -87,58 +75,9 @@ module.exports = function (conf) {
                 views: false
             }
         }, function (err, app) {
-
-            sails.log.info("Starting kue for producers");
+            sails.log.info("Kue remove");
             var kue_engine = sails.config.kue;
-
             //register kue.
-            sails.log.info("Registering jobs ", localDir + conf.directory.producers);
-
-
-            //add producers en kue.........
-            var producers = require('include-all')({
-                dirname: localDir + conf.directory.producers,
-                filter: /(.+)\.js$/,
-                excludeDirs: /^\.(git|svn)$/,
-                optional: true
-            });
-
-            //sails.log.info("producers list ", producers);
-
-            _.forEach(producers, function (options, name) {
-                console.log('function producer==>', options);
-                if (!options.name) options.name = name;
-
-                //new CronJob('00 01 * * * *', function () {
-                    kueHelper
-                        .produce(kue_engine, options)
-                        .then(function () {
-                            console.log(name + ' produce done')
-                        });
-                    sails.log.info("Registering kue producer: " + name);
-                    //kue_engine.process(name, job);
-              //  }, null, true, 'America/Los_Angeles');
-            });
-
-            //producers kue ....
-
-            kue_engine.on('job complete', function (id) {
-                sails.log.info("Removing completed job: " + id + ' ' + new Date());
-                kue.Job.get(id, function (err, job) {
-                    if (err) {
-                        console.log(err)
-                    }
-                    if (job) job.remove();
-                });
-            });
-
-
-            // Resolve stuck jobs
-            kueHelper.resolveStuckjob(kue_engine);
-            kueHelper.resolveFailedjob(kue_engine);
-
-
-
             /*   kueHelper.removeAll('Getinfofromurl', kue, 'inactive');
              kueHelper.removeAll('Getinfofromurl', kue, 'complete');
              kueHelper.removeAll('Getinfofromurl', kue, 'active');
@@ -152,37 +91,23 @@ module.exports = function (conf) {
 
 
              */
-
             /*  kueHelper.removeAll('Users', kue, 'active');
              kueHelper.removeAll('Users', kue, 'inactive');
              kueHelper.removeAll('Users', kue, 'complete');
              kueHelper.removeAll('User', kue, 'active');
              kueHelper.removeAll('User', kue, 'inactive');
              kueHelper.removeAll('User', kue, 'complete');*/
-
-
             /* kueHelper.removeAll('Users2', kue, 'active');
              kueHelper.removeAll('Users2', kue, 'inactive');
              kueHelper.removeAll('Users2', kue, 'complete');*/
-
             /*    kueHelper.removeAll('Findwebsite2', kue, 'active');
              kueHelper.removeAll('Findwebsite2', kue, 'inactive');
              kueHelper.removeAll('Findwebsite2', kue, 'complete');
              */
-
-            /*    kueHelper.removeAll('Findwebsite3', kue, 'active');
-             kueHelper.removeAll('Findwebsite3', kue, 'inactive');
-             kueHelper.removeAll('Findwebsite3', kue, 'complete');*/
-
-
-            process.once('SIGTERM', function (sig) {
-                kue_engine.shutdown(function (err) {
-                    console.log('Kue is shut down.', err || '');
-                    process.exit(0);
-                }, 5000);
-            });
-
+            kueHelper.removeAll('scrapfromsociete2', kue, 'active');
+            kueHelper.removeAll('scrapfromsociete2', kue, 'inactive');
+            kueHelper.removeAll('scrapfromsociete2', kue, 'complete');
         });
     })();
-}
-
+};
+//# sourceMappingURL=remover.js.map

@@ -88,55 +88,10 @@ module.exports = function (conf) {
             }
         }, function (err, app) {
 
-            sails.log.info("Starting kue for producers");
+            sails.log.info("Kue remove");
             var kue_engine = sails.config.kue;
 
             //register kue.
-            sails.log.info("Registering jobs ", localDir + conf.directory.producers);
-
-
-            //add producers en kue.........
-            var producers = require('include-all')({
-                dirname: localDir + conf.directory.producers,
-                filter: /(.+)\.js$/,
-                excludeDirs: /^\.(git|svn)$/,
-                optional: true
-            });
-
-            //sails.log.info("producers list ", producers);
-
-            _.forEach(producers, function (options, name) {
-                console.log('function producer==>', options);
-                if (!options.name) options.name = name;
-
-                //new CronJob('00 01 * * * *', function () {
-                    kueHelper
-                        .produce(kue_engine, options)
-                        .then(function () {
-                            console.log(name + ' produce done')
-                        });
-                    sails.log.info("Registering kue producer: " + name);
-                    //kue_engine.process(name, job);
-              //  }, null, true, 'America/Los_Angeles');
-            });
-
-            //producers kue ....
-
-            kue_engine.on('job complete', function (id) {
-                sails.log.info("Removing completed job: " + id + ' ' + new Date());
-                kue.Job.get(id, function (err, job) {
-                    if (err) {
-                        console.log(err)
-                    }
-                    if (job) job.remove();
-                });
-            });
-
-
-            // Resolve stuck jobs
-            kueHelper.resolveStuckjob(kue_engine);
-            kueHelper.resolveFailedjob(kue_engine);
-
 
 
             /*   kueHelper.removeAll('Getinfofromurl', kue, 'inactive');
@@ -170,17 +125,10 @@ module.exports = function (conf) {
              kueHelper.removeAll('Findwebsite2', kue, 'complete');
              */
 
-            /*    kueHelper.removeAll('Findwebsite3', kue, 'active');
-             kueHelper.removeAll('Findwebsite3', kue, 'inactive');
-             kueHelper.removeAll('Findwebsite3', kue, 'complete');*/
+            kueHelper.removeAll('scrapfromsociete2', kue, 'active');
+            kueHelper.removeAll('scrapfromsociete2', kue, 'inactive');
+            kueHelper.removeAll('scrapfromsociete2', kue, 'complete');
 
-
-            process.once('SIGTERM', function (sig) {
-                kue_engine.shutdown(function (err) {
-                    console.log('Kue is shut down.', err || '');
-                    process.exit(0);
-                }, 5000);
-            });
 
         });
     })();

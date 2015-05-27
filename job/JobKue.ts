@@ -73,6 +73,7 @@ export class JobKue extends JobMaster {
 
                     return this.queue.create(this.type, data)
                         .attempts(2)
+
                         //.priority(5)
                         //.delay(5)
                         //.removeOnComplete(this.removeOnComplete)

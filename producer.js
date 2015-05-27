@@ -91,15 +91,15 @@ module.exports = function (conf) {
                 console.log('function producer==>', options);
                 if (!options.name)
                     options.name = name;
-                new CronJob('00 01 * * * *', function () {
-                    kueHelper
-                        .produce(kue_engine, options)
-                        .then(function () {
-                        console.log(name + ' produce done');
-                    });
-                    sails.log.info("Registering kue producer: " + name);
-                    //kue_engine.process(name, job);
-                }, null, true, 'America/Los_Angeles');
+                //new CronJob('00 01 * * * *', function () {
+                kueHelper
+                    .produce(kue_engine, options)
+                    .then(function () {
+                    console.log(name + ' produce done');
+                });
+                sails.log.info("Registering kue producer: " + name);
+                //kue_engine.process(name, job);
+                //  }, null, true, 'America/Los_Angeles');
             });
             //producers kue ....
             kue_engine.on('job complete', function (id) {
@@ -114,6 +114,7 @@ module.exports = function (conf) {
             });
             // Resolve stuck jobs
             kueHelper.resolveStuckjob(kue_engine);
+            kueHelper.resolveFailedjob(kue_engine);
             /*   kueHelper.removeAll('Getinfofromurl', kue, 'inactive');
              kueHelper.removeAll('Getinfofromurl', kue, 'complete');
              kueHelper.removeAll('Getinfofromurl', kue, 'active');
