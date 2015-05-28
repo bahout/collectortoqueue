@@ -260,11 +260,11 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
             })
             .then(function (col) {
 
-
+//todo maybe uniq(key) should be an option
                 col = _(col)
                     .flatten()
                     .compact()
-                    .uniq()
+                    .uniq(key)
                     .value();
 
                 var pulkIds = _(col).pluck(key).value();
@@ -316,6 +316,7 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
 
                         var idsToSave = _.difference(pulkIds, pulk2Ids);
 
+                        sails.log.silly('pulk2Ids found', pulk2Ids);
                         sails.log.silly('idsToSave ', idsToSave);
 
                         if (idsToSave.length == 0) {

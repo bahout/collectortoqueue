@@ -212,10 +212,11 @@ function updateAndSave(modelFrom, modelTo, comute, options) {
                 return _queueProcess(col, comute, options.concurrency || 1);
         })
             .then(function (col) {
+            //todo maybe uniq(key) should be an option
             col = _(col)
                 .flatten()
                 .compact()
-                .uniq()
+                .uniq(key)
                 .value();
             var pulkIds = _(col).pluck(key).value();
             //console.log('data to save ==>', col);
@@ -255,6 +256,7 @@ function updateAndSave(modelFrom, modelTo, comute, options) {
                 sails.log.silly('ids founds ?', data);
                 var pulk2Ids = _(data).pluck(key).value();
                 var idsToSave = _.difference(pulkIds, pulk2Ids);
+                sails.log.silly('pulk2Ids found', pulk2Ids);
                 sails.log.silly('idsToSave ', idsToSave);
                 if (idsToSave.length == 0) {
                     sails.log.silly('data already exist nothing to save');

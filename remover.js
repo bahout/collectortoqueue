@@ -104,10 +104,10 @@ module.exports = function (conf) {
              kueHelper.removeAll('Findwebsite2', kue, 'inactive');
              kueHelper.removeAll('Findwebsite2', kue, 'complete');
              */
-            kueHelper.removeAll('scrapfromsociete2', kue, 'active');
-            kueHelper.removeAll('scrapfromsociete2', kue, 'inactive');
-            kueHelper.removeAll('scrapfromsociete2', kue, 'complete');
-            kueHelper.removeAll('scrapfromsociete2', kue, 'failed');
+            kueHelper.removeAll('Users', kue, 'active');
+            kueHelper.removeAll('Users', kue, 'inactive');
+            kueHelper.removeAll('Users', kue, 'complete');
+            kueHelper.removeAll('Users', kue, 'failed');
         });
     })();
 };
