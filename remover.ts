@@ -128,6 +128,7 @@ module.exports = function (conf) {
             kueHelper.removeAll('scrapfromsociete2', kue, 'active');
             kueHelper.removeAll('scrapfromsociete2', kue, 'inactive');
             kueHelper.removeAll('scrapfromsociete2', kue, 'complete');
+            kueHelper.removeAll('scrapfromsociete2', kue, 'failed');
 
 
         });
