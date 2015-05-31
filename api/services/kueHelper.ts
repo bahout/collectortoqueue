@@ -4,6 +4,7 @@
 import  Promise = require('bluebird');
 import async = require('async');
 import kue = require('kue');
+var myOptions = require('../../consumer').myOptions;
 
 
 module.exports = {
@@ -15,11 +16,18 @@ module.exports = {
 };
 
 
+/**
+ * Used by the producer
+ * @param col
+ * @param comute
+ * @param concurrency : nb job add in kue in save time
+ * @private
+ */
 function _queueProcess(col, comute, concurrency) {
     return new Promise(function (resolve, reject) {
 
         var saver = [];
-        //creat a queue
+        console.log('create a queue');
         var q = async.queue(comute, concurrency);
 
         var count = 0;
@@ -190,18 +198,15 @@ function sendJobs(kue_engine, options) {
         var concurrency = options.concurrency || 1;
         var kueName = options.name || 'default';
 
-        if (options.key) var key = options.key;
 
         for (var i = num; i < max + 1; i = i + step) {
 
             var items = {
                 min: i,
                 size: step - 1,
-                condition: condition,
-                concurrency: concurrency,
+                condition: condition
             };
 
-            if (key) items['key'] = key;
 
             arr.push(items);
         }
@@ -228,35 +233,34 @@ function sendJobs(kue_engine, options) {
 
 }
 
-
-function updateAndSave(modelFrom, modelTo, comute, options = {}) {
+/**
+ * Update Date or Save
+ * @param modelFrom
+ * @param modelTo
+ * @param comute
+ * @param kueInfo
+ */
+//todo to simplify
+function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
+    var kueData = kueInfo.data; // get data save in Kue
+    var option = myOptions[kueInfo.type]; //get producer info
 
     return new Promise((resolve, reject)=> {
 
-        var key = options.key || 'id';
-
-
+        var key = option.key || 'id';
         var ModelFrom = sails.models[modelFrom.toLowerCase()];
         var ModelTo = sails.models[modelTo.toLowerCase()];
 
-
-        /*
-         console.log('modelFrom ', modelFrom, sails.models[modelFrom.toLowerCase()]);
-         console.log('modelTo ', modelTo, sails.models[modelTo.toLowerCase()]);
-         console.log('sails.models ', sails.models);
-         sails.log.info(options.condition)
-         */
-        sails.log.silly('we start to get data from ', modelFrom.toLowerCase())
+        sails.log.silly('we start to get data from ', modelFrom.toLowerCase());
 
         return ModelFrom
-            .find(options.condition || {})
-            .limit(options.size || 50)
-            .skip(options.min || 0)
+            .find(kueData.condition || {})
+            .limit(kueData.size || 50)
+            .skip(kueData.min || 0)
             .then(function (col) {
-
-                sails.log.silly('we successed to have data with concurrency', options.concurrency, col);
+                sails.log.silly('we successed to have data with concurrency', option.dataToCommuteInSameTime);
                 if (col.length == 0) return resolve();
-                if (col.length > 0) return _queueProcess(col, comute, options.concurrency || 1)
+                if (col.length > 0) return _queueProcess(col, comute, option.dataToCommuteInSameTime || 1)
             })
             .then(function (col) {
 
@@ -267,65 +271,53 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
                     .uniq(key)
                     .value();
 
-                var pulkIds = _(col).pluck(key).value();
-
-                //console.log('data to save ==>', col);
-
                 if (col.length == 0) {
                     console.log('nothing to save');
                     return resolve();
                 }
 
+                var idsToSave = _(col).pluck(key).value();
 
-                /*if (ModelTo.adapterDictionary.mongo) {
-                 var where = {};
-                 where[key] = col.map(function (d) {
-                 //console.log(key)
-                 return d[key];
-                 });
-                 }
-                 else {*/
-                /*   var where = [];
-                 where = col.map(function (d) {
-                 var tmp = {};
-
-                 tmp[key] = d[key];
-                 return tmp;
-                 });
-                 // }
-                 */
-                //console.log('where ==>', where);
-                console.log('pulkIds ==>', pulkIds);
-                //console.log(where[key])
-
-                //console.log(ModelTo)
-                //console.log(ModelTo.adapterDictionary.mongo);
-
+                //sails.log.silly('idsToSave ==>', idsToSave);
                 var tps1 = new Date();
                 sails.log.silly('we will saved data in new table', tps1);
 
-                var newVar = {};
-                newVar[key] = pulkIds;
+                var whereKeysTofind = {};
+                whereKeysTofind[key] = idsToSave; //{key:[id1,id2,...]
 
                 return ModelTo
                     //.create(col)
-                    .find(newVar)
+                    .find(whereKeysTofind)
                     .then(function (data, err) {
-                        sails.log.silly('ids founds ?', data);
-                        var pulk2Ids = _(data).pluck(key).value();
+                        //sails.log.silly('ids founds ?', data);
+                        var idsFinds = _(data).pluck(key).value();
 
-                        var idsToSave = _.difference(pulkIds, pulk2Ids);
+                        var idsDifference = _.difference(idsToSave, idsFinds);
+                        var idsIntersection = _.intersection(idsToSave, idsFinds);
 
-                        sails.log.silly('pulk2Ids found', pulk2Ids);
-                        sails.log.silly('idsToSave ', idsToSave);
 
-                        if (idsToSave.length == 0) {
-                            sails.log.silly('data already exist nothing to save');
-                            return resolve()
+                        sails.log.silly('nothing to save or update', option.method, idsIntersection.length, idsDifference.length);
+
+                        if (idsDifference.length > 0
+                            && (option.method == undefined || option.method == 'findOrCreate')) {
+                            sails.log.silly('we will save data');
+
+                            return _createRowsInDb();
+                        }
+                        else if (idsIntersection.length > 0
+                            && (option.method == 'findAndUpdate')) {
+                            sails.log.silly('we will update data');
+                            return _updateRowsInDb();
                         }
                         else {
+                            return resolve()
+                        }
+
+
+                        /////////private method++//////////
+                        function _createRowsInDb() {
                             var dataToSave = _(col).map(function (ele) {
-                                if (idsToSave.indexOf(ele[key]) != -1) {
+                                if (idsIntersection.indexOf(ele[key]) != -1) {
                                     return ele;
                                 }
                             })
@@ -333,11 +325,40 @@ function updateAndSave(modelFrom, modelTo, comute, options = {}) {
                                 .uniq()
                                 .value();
 
-                            sails.log.silly('data to Create want to create', dataToSave);
+                            sails.log.silly('data to Create want to update', dataToSave);
+                            return ModelTo.create(dataToSave);
+                            //if (options.method == 'update') return ModelTo.create(dataToSave)
+                        };
 
+                        function _updateRowsInDb() {
+                            var dataToSave = _(col).map(function (ele) {
+                                if (idsDifference.indexOf(ele[key]) != -1) {
+                                    return ele;
+                                }
+                            })
+                                .compact()
+                                .uniq()
+                                .value();
+
+                            //with map order is not guaranteed ==> we have to re-create key Array to guaranteed order
+                            var idsToUpdate = [];
+                            var dataToSave = _(dataToSave).map(function (ele) {
+                                var tmp = {};
+                                tmp[key] = ele[key]
+                                idsToUpdate.push(tmp);
+                                return ele;
+                            }).value();
+
+
+                            sails.log.silly('data to Create want to create', dataToSave);
                             //todo Maybe update
-                            return ModelTo.create(dataToSave)
-                        }
+                            return ModelTo.update(idsToUpdate, dataToSave);
+                            //if (options.method == 'update') return ModelTo.create(dataToSave)
+                        };
+
+                        /////////////////   END OF PRIVATE METHOD //////////////////////
+
+
                     })
                     //.create(col)
                     .then(function (data, err) {
@@ -381,7 +402,7 @@ function removeAll(type, kue_engine, status = 'inactive') {
  * @param maxTimeToExecute
  */
 
-function resolveFailedjob(kue_engine, interval = 60000, maxTimeToExecute = 6000) {
+function resolveFailedjob(kue_engine, interval = 60000, maxTimeToExecute = 600000) {
     setInterval(() => {
 
         // first check the active job list (hopefully this is relatively small and cheap)
@@ -485,3 +506,5 @@ var createJobInKue = function (kue_engine, kueName, jobData, options, callback) 
             callback();
         });
 };
+
+

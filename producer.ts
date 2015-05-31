@@ -105,19 +105,26 @@ module.exports = function (conf) {
 
             //sails.log.info("producers list ", producers);
 
+            var sendProducerToKue = function (options, name) {
+                kueHelper
+                    .produce(kue_engine, options)
+                    .then(function () {
+                        console.log(name + ' produce done')
+                    });
+                sails.log.info("Registering kue producer: " + name);
+            };
             _.forEach(producers, function (options, name) {
                 console.log('function producer==>', options);
                 if (!options.name) options.name = name;
 
-                //new CronJob('00 01 * * * *', function () {
-                    kueHelper
-                        .produce(kue_engine, options)
-                        .then(function () {
-                            console.log(name + ' produce done')
-                        });
-                    sails.log.info("Registering kue producer: " + name);
-                    //kue_engine.process(name, job);
-              //  }, null, true, 'America/Los_Angeles');
+                //todo to test
+                if (options.cron) new CronJob(options.cron, function () {
+                    sendProducerToKue(options, name);
+                }, null, true, 'America/Los_Angeles');
+
+                if (options.sendProducerAtStartup != false) sendProducerToKue(options, name)
+
+
             });
 
             //producers kue ....
@@ -136,7 +143,6 @@ module.exports = function (conf) {
             // Resolve stuck jobs
             kueHelper.resolveStuckjob(kue_engine);
             kueHelper.resolveFailedjob(kue_engine);
-
 
 
             /*   kueHelper.removeAll('Getinfofromurl', kue, 'inactive');

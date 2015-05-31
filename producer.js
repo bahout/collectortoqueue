@@ -87,19 +87,25 @@ module.exports = function (conf) {
                 optional: true
             });
             //sails.log.info("producers list ", producers);
-            _.forEach(producers, function (options, name) {
-                console.log('function producer==>', options);
-                if (!options.name)
-                    options.name = name;
-                //new CronJob('00 01 * * * *', function () {
+            var sendProducerToKue = function (options, name) {
                 kueHelper
                     .produce(kue_engine, options)
                     .then(function () {
                     console.log(name + ' produce done');
                 });
                 sails.log.info("Registering kue producer: " + name);
-                //kue_engine.process(name, job);
-                //  }, null, true, 'America/Los_Angeles');
+            };
+            _.forEach(producers, function (options, name) {
+                console.log('function producer==>', options);
+                if (!options.name)
+                    options.name = name;
+                //todo to test
+                if (options.cron)
+                    new CronJob(options.cron, function () {
+                        sendProducerToKue(options, name);
+                    }, null, true, 'America/Los_Angeles');
+                if (options.sendProducerAtStartup != false)
+                    sendProducerToKue(options, name);
             });
             //producers kue ....
             kue_engine.on('job complete', function (id) {

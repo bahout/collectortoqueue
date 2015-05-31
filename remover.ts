@@ -14,7 +14,7 @@ var CronJob = require('cron').CronJob;
 
 var configData, localDir;
 
-module.exports = function (conf) {
+module.exports = function (conf, options) {
 
     //console.log(conf);
     console.log('start');
@@ -125,10 +125,12 @@ module.exports = function (conf) {
              kueHelper.removeAll('Findwebsite2', kue, 'complete');
              */
 
-            kueHelper.removeAll('Users', kue, 'active');
-            kueHelper.removeAll('Users', kue, 'inactive');
-            kueHelper.removeAll('Users', kue, 'complete');
-            kueHelper.removeAll('Users', kue, 'failed');
+            _.forEach(options, function (option) {
+                kueHelper.removeAll(option.kueName, kue, 'active');
+                kueHelper.removeAll(option.kueName, kue, 'inactive');
+                kueHelper.removeAll(option.kueName, kue, 'complete');
+                kueHelper.removeAll(option.kueName, kue, 'failed');
+            })
 
 
         });

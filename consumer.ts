@@ -19,8 +19,28 @@ module.exports = function (conf) {
     console.log('start');
 
     module.exports.myConf = conf;
-
     process.chdir(__dirname);
+
+
+    //////////get producer info
+    if (__dirname.indexOf('node_modules') == -1) {
+        localDir = __dirname + path.sep + '..' + path.sep
+    } else {
+        localDir = __dirname + path.sep + '..' + path.sep + '..' + path.sep
+    }
+
+    var options = require('include-all')({
+        dirname: localDir + conf.directory.producers,
+        filter: /(.+)\.js$/,
+        excludeDirs: /^\.(git|svn)$/,
+        optional: true
+    });
+    module.exports.myOptions = options;
+    //////////////
+
+
+
+
 
 // Ensure a "sails" can be located:
     (function () {
@@ -56,11 +76,6 @@ module.exports = function (conf) {
             }
         }
 
-        if (__dirname.indexOf('node_modules') == -1) {
-            localDir = __dirname + path.sep + '..' + path.sep
-        } else {
-            localDir = __dirname + path.sep + '..' + path.sep + '..' + path.sep
-        }
 
         sails.load({
             paths: {
@@ -93,6 +108,7 @@ module.exports = function (conf) {
             //register kue.
             sails.log.info("Registering jobs ", localDir + conf.directory.jobs);
 
+            //console.log('producers', options);
 
             //process .........
             var jobs = require('include-all')({
@@ -105,9 +121,28 @@ module.exports = function (conf) {
             sails.log.info("jobs list ", jobs);
 
             _.forEach(jobs, function (job, name) {
-                console.log(job);
+                //console.log('job==>', job, 'name==>', name);
                 sails.log.info("Registering kue handler: " + name);
-                kue_engine.process(name, job);
+                //todo to improve concurrency we should get value from job config
+
+                var concurrency = _getConcurrency('concurrency', 2);
+                kue_engine.process(name, concurrency, job);
+
+
+                //local function
+                function _getConcurrency(params, def) {
+                    try {
+                        var producer = options[name] || {};
+                        //default concurrency
+                        var concurrency = producer[params] || def;
+                    }
+                    catch (e) {
+                        sails.log.error('error in consumer.ts', e)
+                    }
+                    return concurrency;
+                };
+
+
             });
             //process kue ....
 
