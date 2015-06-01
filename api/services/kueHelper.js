@@ -244,33 +244,36 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                 sails.log.silly('nothing to save or update', option.method, idsIntersection.length, idsDifference.length);
                 if (idsDifference.length > 0
                     && (option.method == undefined || option.method == 'findOrCreate')) {
-                    sails.log.silly('we will save data');
-                    return _createRowsInDb();
+                    sails.log.silly('we will save data', col);
+                    return _createRowsInDb(col);
                 }
                 else if (idsIntersection.length > 0
                     && (option.method == 'findAndUpdate')) {
-                    sails.log.silly('we will update data');
-                    return _updateRowsInDb();
+                    sails.log.silly('we will update data', col);
+                    return _updateRowsInDb(col);
                 }
                 else {
                     return resolve();
                 }
                 /////////private method++//////////
-                function _createRowsInDb() {
+                function _createRowsInDb(col) {
+                    sails.log.silly('data to create', col);
+                    sails.log(idsIntersection, key);
                     var dataToSave = _(col).map(function (ele) {
-                        if (idsIntersection.indexOf(ele[key]) != -1) {
+                        //we want to save data not include in intersection: it is new data
+                        if (idsIntersection.indexOf(ele[key]) == -1) {
                             return ele;
                         }
                     })
                         .compact()
                         .uniq()
                         .value();
-                    sails.log.silly('data to Create want to update', dataToSave);
+                    sails.log.silly('data to Create want to creat', dataToSave);
                     return ModelTo.create(dataToSave);
                     //if (options.method == 'update') return ModelTo.create(dataToSave)
                 }
                 ;
-                function _updateRowsInDb() {
+                function _updateRowsInDb(col) {
                     var dataToSave = _(col).map(function (ele) {
                         if (idsDifference.indexOf(ele[key]) != -1) {
                             return ele;
