@@ -13,7 +13,7 @@ module.exports = {
     resolveFailedjob: resolveFailedjob
 };
 /**
- * Used by the producer
+ * Used by the consummer
  * @param col
  * @param comute
  * @param concurrency : nb job add in kue in save time
@@ -28,14 +28,17 @@ function _queueProcess(col, comute, concurrency) {
         //add data to queue
         _(col).forEach(function (ele) {
             q.push(ele, function (err, data) {
+                //we get here after data has been process and is ready to be saved
+                //sails.log('data element =>', data);
                 count++;
                 saver.push(data);
-                sails.log.silly('finished processing ' + count);
+                //sails.log.silly('finished processing ' + count);
             });
         }).value();
         // assign a callback
         q.drain = function () {
-            console.log('all task from queue have been processed');
+            //console.log('all task from queue have been processed');
+            //sails.log('saver ==>', saver);
             //exit of queue Kue
             return resolve(saver);
         };
@@ -96,7 +99,7 @@ function countElementForModel(modelName, options) {
                 reject(err);
         }).catch(function (e) {
             console.log('count error', e);
-            reject(err);
+            reject(e);
         });
     });
 }
@@ -185,8 +188,8 @@ function sendJobs(kue_engine, options) {
             return resolve(options);
         };
         // add some items to the queue (batch-wise)
-        q.push(arr, function (err) {
-            sails.log.silly('finished processing 1 item');
+        q.push(arr, function (ele) {
+            sails.log.silly('finished processing 1 item', ele);
         });
     });
 }
@@ -205,19 +208,21 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
         var key = option.key || 'id';
         var ModelFrom = sails.models[modelFrom.toLowerCase()];
         var ModelTo = sails.models[modelTo.toLowerCase()];
-        sails.log.silly('we start to get data from ', modelFrom.toLowerCase());
+        //sails.log.silly('we start to get data from ', modelFrom.toLowerCase(), option.condition);
         return ModelFrom
-            .find(kueData.condition || {})
+            .find(option.condition || {})
             .limit(kueData.size || 50)
             .skip(kueData.min || 0)
-            .then(function (col) {
-            sails.log.silly('we successed to have data with concurrency', option.dataToCommuteInSameTime);
-            if (col.length == 0)
+            .then(function (findDataToConsumme) {
+            //sails.log.silly('we successed to have data with concurrency', findDataToConsumme, option.dataToCommuteInSameTime);
+            if (findDataToConsumme.length == 0)
                 return resolve();
-            if (col.length > 0)
-                return _queueProcess(col, comute, option.dataToCommuteInSameTime || 1);
+            if (findDataToConsumme.length > 0)
+                return _queueProcess(findDataToConsumme, comute, option.dataToCommuteInSameTime || 1);
         })
             .then(function (col) {
+            kueInfo.log('final data to update' + JSON.stringify(col));
+            sails.log('final data to update' + JSON.stringify(col));
             //todo maybe uniq(key) should be an option
             col = _(col)
                 .flatten()
@@ -231,7 +236,7 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
             var idsToSave = _(col).pluck(key).value();
             //sails.log.silly('idsToSave ==>', idsToSave);
             var tps1 = new Date();
-            sails.log.silly('we will saved data in new table', tps1);
+            // sails.log.silly('we will saved data in new table', tps1);
             var whereKeysTofind = {};
             whereKeysTofind[key] = idsToSave; //{key:[id1,id2,...]
             return ModelTo
@@ -241,15 +246,17 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                 var idsFinds = _(data).pluck(key).value();
                 var idsDifference = _.difference(idsToSave, idsFinds);
                 var idsIntersection = _.intersection(idsToSave, idsFinds);
-                sails.log.silly('nothing to save or update', option.method, idsIntersection.length, idsDifference.length);
+                kueInfo.log('the really final data to update' + JSON.stringify(col));
+                // sails.log('the really final data to update' + JSON.stringify(col));
+                // sails.log.silly('nothing to save or update', option.method, idsIntersection.length, idsDifference.length);
                 if (idsDifference.length > 0
                     && (option.method == undefined || option.method == 'findOrCreate')) {
-                    sails.log.silly('we will save data', col);
+                    //sails.log.silly('we will save data', col);
                     return _createRowsInDb(col);
                 }
                 else if (idsIntersection.length > 0
                     && (option.method == 'findAndUpdate')) {
-                    sails.log.silly('we will update data', col);
+                    //sails.log.silly('we will update data', col);
                     return _updateRowsInDb(col);
                 }
                 else {
@@ -257,8 +264,8 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                 }
                 /////////private method++//////////
                 function _createRowsInDb(col) {
-                    sails.log.silly('data to create', col);
-                    sails.log(idsIntersection, key);
+                    //sails.log.silly('data to create', col);
+                    // sails.log(idsIntersection, key);
                     var dataToSave = _(col).map(function (ele) {
                         //we want to save data not include in intersection: it is new data
                         if (idsIntersection.indexOf(ele[key]) == -1) {
@@ -290,7 +297,7 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                         idsToUpdate.push(tmp);
                         return ele;
                     }).value();
-                    sails.log.silly('data to Create want to create', dataToSave);
+                    // sails.log.silly('data to Create want to create', dataToSave);
                     //todo Maybe update
                     return ModelTo.update(idsToUpdate, dataToSave);
                     //if (options.method == 'update') return ModelTo.create(dataToSave)
@@ -299,7 +306,7 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                 /////////////////   END OF PRIVATE METHOD //////////////////////
             })
                 .then(function (data, err) {
-                sails.log.silly('data saved ', new Date() - tps1, data, err);
+                //sails.log.silly('data saved ', new Date() - tps1, data, err);
                 if (!err)
                     return resolve(data);
                 if (err)
@@ -389,8 +396,8 @@ function resolveStuckjob(kue_engine, interval, maxTimeToExecute) {
                     // we compare the updated_at to current time.
                     var lastUpdate = +Date.now() - job.updated_at;
                     if (lastUpdate > maxTimeToExecute) {
-                        sails.log.silly('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
-                        sails.log.silly('================> ', job.data, job.type);
+                        //sails.log.silly('job ' + job.id + ' hasnt been updated in ' + lastUpdate);
+                        //sails.log.silly('================> ', job.data, job.type);
                         //TODO to remove comment
                         createJobInKue(kue_engine, job.type, job.data, {}, function () {
                             sails.log.silly('job stuck recreated done done');
