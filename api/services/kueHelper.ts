@@ -267,7 +267,7 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
             })
             .then(function (col) {
 
-                kueInfo.log('final data to update' + JSON.stringify(col));
+                // kueInfo.log('final data to update' + JSON.stringify(col));
                 sails.log('final data to update' + JSON.stringify(col));
 
 
@@ -288,7 +288,7 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
 
                 //sails.log.silly('idsToSave ==>', idsToSave);
                 var tps1 = new Date();
-               // sails.log.silly('we will saved data in new table', tps1);
+                // sails.log.silly('we will saved data in new table', tps1);
 
                 var whereKeysTofind = {};
                 whereKeysTofind[key] = idsToSave; //{key:[id1,id2,...]
@@ -304,11 +304,11 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                         var idsIntersection = _.intersection(idsToSave, idsFinds);
 
 
-                        kueInfo.log('the really final data to update' + JSON.stringify(col));
-                       // sails.log('the really final data to update' + JSON.stringify(col));
+                        //kueInfo.log('the really final data to update' + JSON.stringify(col));
+                        // sails.log('the really final data to update' + JSON.stringify(col));
 
 
-                       // sails.log.silly('nothing to save or update', option.method, idsIntersection.length, idsDifference.length);
+                        // sails.log.silly('nothing to save or update', option.method, idsIntersection.length, idsDifference.length);
 
                         if (idsDifference.length > 0
                             && (option.method == undefined || option.method == 'findOrCreate')) {
@@ -328,7 +328,7 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                         /////////private method++//////////
                         function _createRowsInDb(col) {
                             //sails.log.silly('data to create', col);
-                           // sails.log(idsIntersection, key);
+                            // sails.log(idsIntersection, key);
 
                             var dataToSave = _(col).map(function (ele) {
                                 //we want to save data not include in intersection: it is new data
@@ -365,7 +365,7 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                             }).value();
 
 
-                           // sails.log.silly('data to Create want to create', dataToSave);
+                            // sails.log.silly('data to Create want to create', dataToSave);
                             //todo Maybe update
                             return ModelTo.update(idsToUpdate, dataToSave);
                             //if (options.method == 'update') return ModelTo.create(dataToSave)

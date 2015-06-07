@@ -221,7 +221,7 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                 return _queueProcess(findDataToConsumme, comute, option.dataToCommuteInSameTime || 1);
         })
             .then(function (col) {
-            kueInfo.log('final data to update' + JSON.stringify(col));
+            // kueInfo.log('final data to update' + JSON.stringify(col));
             sails.log('final data to update' + JSON.stringify(col));
             //todo maybe uniq(key) should be an option
             col = _(col)
@@ -246,7 +246,7 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                 var idsFinds = _(data).pluck(key).value();
                 var idsDifference = _.difference(idsToSave, idsFinds);
                 var idsIntersection = _.intersection(idsToSave, idsFinds);
-                kueInfo.log('the really final data to update' + JSON.stringify(col));
+                //kueInfo.log('the really final data to update' + JSON.stringify(col));
                 // sails.log('the really final data to update' + JSON.stringify(col));
                 // sails.log.silly('nothing to save or update', option.method, idsIntersection.length, idsDifference.length);
                 if (idsDifference.length > 0
