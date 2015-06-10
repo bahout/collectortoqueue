@@ -91,12 +91,12 @@ module.exports = function (conf) {
                 kueHelper
                     .produce(kue_engine, options)
                     .then(function () {
-                    console.log(name + ' produce done');
+                    //console.log(name + ' produce done')
                 });
-                sails.log.info("Registering kue producer: " + name);
+                //sails.log.info("Registering kue producer: " + name);
             };
             _.forEach(producers, function (options, name) {
-                console.log('function producer==>', options);
+                //console.log('function producer==>', options);
                 if (!options.name)
                     options.name = name;
                 //todo to test
@@ -109,13 +109,14 @@ module.exports = function (conf) {
             });
             //producers kue ....
             kue_engine.on('job complete', function (id) {
-                sails.log.info("Removing completed job: " + id + ' ' + new Date());
                 kue.Job.get(id, function (err, job) {
                     if (err) {
                         console.log(err);
                     }
-                    if (job)
+                    if (job) {
+                        sails.log.info(new Date(), " Removing completed job: ", job.type, job.data, job.id);
                         job.remove();
+                    }
                 });
             });
             // Resolve stuck jobs

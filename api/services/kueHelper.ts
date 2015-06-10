@@ -65,11 +65,11 @@ function produce(kue_engine, options) {
                 return countElementForModel(modelName, options)
             })
             .then(function (options) {
-                console.log('===>', options);
+                console.log('===>', options.name, options.count);
                 return sendJobs(kue_engine, options)
             })
             .then(function (options) {
-                console.log('===>', options);
+                //console.log('===>', options);
                 return saveLastTouch(options)
             })
             .then(resolve)
@@ -126,11 +126,11 @@ function countElementForModel(modelName, options = {}) {
 
 function getLastTouch(options) {
     return new Promise((resolve, reject)=> {
-        console.log('getLastTouch ==>', options.name);
+        //console.log('getLastTouch ==>', options.name);
         return Collectortoqueue
             .findOne({model: options.name})
             .then(function afterwards(updated, err) {
-                console.log(err, updated);
+                //console.log(err, updated);
                 //if (_.isArray(updated)) updated = _.first(updated);
                 options.touch = updated;
                 if (!err) resolve(options);
@@ -143,11 +143,11 @@ function getLastTouch(options) {
 
 function saveLastTouch(options) {
     return new Promise((resolve, reject)=> {
-        console.log("saveLastTouch ===>", options.name);
+        //console.log("saveLastTouch ===>", options.name);
         return Collectortoqueue
             .findOne({model: options.name})
             .then(function (data) {
-                console.log(data);
+                //console.log(data);
                 if (data) {
                     return Collectortoqueue
                         .update({model: options.name}, {
@@ -164,7 +164,7 @@ function saveLastTouch(options) {
 
             })
             .then(function afterwards(updated, err) {
-                console.log(err, updated);
+                //console.log(err, updated);
                 //if (_.isArray(updated)) updated = _.first(updated);
                 options.touch = updated;
                 if (!err) resolve(options);
@@ -187,6 +187,8 @@ function sendJobs(kue_engine, options) {
             console.log('no job to add');
             return resolve(options);
         }
+
+        console.log('job to add ', options.count);
 
 
         //if we used autoupdate we can't specify this
@@ -229,8 +231,8 @@ function sendJobs(kue_engine, options) {
 
 
         // add some items to the queue (batch-wise)
-        q.push(arr, function (ele) {
-            sails.log.silly('finished processing 1 item', ele);
+        q.push(arr, function (err, ele) {
+            sails.log.silly('finished processing 1 item', err, ele);
         });
     })
 
@@ -286,9 +288,9 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
 
                 var idsToSave = _(col).pluck(key).value();
 
-                //sails.log.silly('idsToSave ==>', idsToSave);
+                sails.log.silly('idsToSave ==>', idsToSave);
                 var tps1 = new Date();
-                // sails.log.silly('we will saved data in new table', tps1);
+                sails.log.silly('we will saved data in new table', tps1);
 
                 var whereKeysTofind = {};
                 whereKeysTofind[key] = idsToSave; //{key:[id1,id2,...]
@@ -300,12 +302,19 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                         //sails.log.silly('ids founds ?', data);
                         var idsFinds = _(data).pluck(key).value();
 
+                        console.log('idsFinds ==>', idsDifference);
+
+
+                        console.log('idsFinds ==>', idsFinds);
                         var idsDifference = _.difference(idsToSave, idsFinds);
                         var idsIntersection = _.intersection(idsToSave, idsFinds);
 
+                        console.log('idsIntersection ==>', idsIntersection);
+                        console.log('idsDifference ==>', idsDifference);
+
 
                         //kueInfo.log('the really final data to update' + JSON.stringify(col));
-                        // sails.log('the really final data to update' + JSON.stringify(col));
+                        sails.log.silly('the really final data to update' + JSON.stringify(col));
 
 
                         // sails.log.silly('nothing to save or update', option.method, idsIntersection.length, idsDifference.length);
@@ -321,6 +330,7 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                             return _updateRowsInDb(col);
                         }
                         else {
+                            sails.log.silly('==> nothing to create or update')
                             return resolve()
                         }
 
@@ -340,8 +350,11 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
                                 .uniq()
                                 .value();
 
-                            sails.log.silly('data to Create want to creat', dataToSave);
-                            return ModelTo.create(dataToSave);
+                            //sails.log.silly('data to Create want to creat', dataToSave);
+                            return ModelTo.create(dataToSave).exec(function (err, data) {
+                                sails.log.silly('final data update in data base !!!');
+                                //if (options.method == 'update') return ModelTo.create(dataToSave)
+                            });
                             //if (options.method == 'update') return ModelTo.create(dataToSave)
                         };
 
@@ -367,7 +380,11 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
 
                             // sails.log.silly('data to Create want to create', dataToSave);
                             //todo Maybe update
-                            return ModelTo.update(idsToUpdate, dataToSave);
+                            return ModelTo.update(idsToUpdate, dataToSave)
+                                .exec(function (err, data) {
+                                    sails.log.silly('final data update in data base !!!');
+                                    //if (options.method == 'update') return ModelTo.create(dataToSave)
+                                });
                             //if (options.method == 'update') return ModelTo.create(dataToSave)
                         };
 
@@ -441,7 +458,9 @@ function resolveFailedjob(kue_engine, interval = 60000, maxTimeToExecute = 60000
 
                         //TODO to remove comment
                         createJobInKue(kue_engine, job.type, job.data, {}, function () {
-                            console.log('job failed recreated done done')
+
+                            sails.log.info(new Date(), "failed job recreated ", job.type, job.data, job.id);
+
                         });
                         // either reschedule (re-attempt?) or remove the job.
 
@@ -485,7 +504,7 @@ function resolveStuckjob(kue_engine, interval = 60000, maxTimeToExecute = 600000
 
                         //TODO to remove comment
                         createJobInKue(kue_engine, job.type, job.data, {}, function () {
-                            sails.log.silly('job stuck recreated done done')
+                            sails.log.silly('job stuck recreated done done', job.type, job.data)
                         });
                         // either reschedule (re-attempt?) or remove the job.
 
