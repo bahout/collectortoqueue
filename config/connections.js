@@ -84,6 +84,16 @@ module.exports.connections = {
         // database: 'your_mongo_db_name_here'
     },
 
+/*    Elasticsearch: {
+        adapter: 'sails-elasticsearch',
+        hosts: ['http://191.235.144.47:9200'],
+        keepAlive: false,
+        sniffOnStart: true,
+        maxRetries: 10,
+        deadTimeout: 40000,
+        sniffOnConnectionFault: true,
+        apiVersion: '1.3'
+    },*/
     /***************************************************************************
      *                                                                          *
      * PostgreSQL is another officially supported relational database.          *

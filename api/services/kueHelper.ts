@@ -256,14 +256,14 @@ function updateAndSave(modelFrom, modelTo, comute, kueInfo) {
         var ModelFrom = sails.models[modelFrom.toLowerCase()];
         var ModelTo = sails.models[modelTo.toLowerCase()];
 
-        //sails.log.silly('we start to get data from ', modelFrom.toLowerCase(), option.condition);
+        sails.log.silly('we start to get data from ', modelFrom.toLowerCase(), option.condition);
 
         return ModelFrom
             .find(option.condition || {})
             .limit(kueData.size || 50)
             .skip(kueData.min || 0)
             .then(function (findDataToConsumme) {
-                //sails.log.silly('we successed to have data with concurrency', findDataToConsumme, option.dataToCommuteInSameTime);
+                sails.log.silly('we successed to have data with concurrency', findDataToConsumme, option.dataToCommuteInSameTime);
                 if (findDataToConsumme.length == 0) return resolve();
                 if (findDataToConsumme.length > 0) return _queueProcess(findDataToConsumme, comute, option.dataToCommuteInSameTime || 1)
             })
